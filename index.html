@@ -105,6 +105,18 @@
   --font-primary:-apple-system,sans-serif; --status-online:#4dcd5e;
   --input-bg:#242f3d; --checkmark-color:#5eaad7;
 }
+:root[data-theme="future-midnight"] {
+  --bg-main:#060b16; --bg-radial:radial-gradient(circle at 12% 0%,#172d4a 0%,#080e1b 42%,#03050b 100%);
+  --card-bg:rgba(13,25,43,.88); --accent-color:#8ff7dc;
+  --accent-gradient:linear-gradient(135deg,#8ff7dc 0%,#72b6ff 50%,#aa78ff 100%);
+  --glass-border:rgba(171,225,255,.16); --text-main:#f1fbff; --text-muted:#9db4c6;
+  --glow-effect:0 0 26px rgba(120,220,255,.24); --msg-me-shadow:0 8px 24px rgba(80,126,255,.2);
+  --msg-me-bg:linear-gradient(135deg,rgba(47,117,164,.9),rgba(91,64,158,.9)); --msg-other-bg:rgba(255,255,255,.075);
+  --composer-bg:rgba(3,9,19,.9); --header-bg:rgba(6,11,22,.8); --chat-bg:var(--bg-radial);
+  --bubble-me-radius:18px 18px 4px 18px; --bubble-other-radius:18px 18px 18px 4px;
+  --font-primary:var(--user-font,'Cairo'),-apple-system,sans-serif; --status-online:#8ff7dc;
+  --input-bg:rgba(255,255,255,.09); --checkmark-color:#8ff7dc;
+}
 * { box-sizing:border-box; margin:0; padding:0; font-family:var(--font-primary); }
 html,body { width:100%; height:100%; min-height:100vh; overflow:hidden; background:var(--bg-main); color:var(--text-main); overscroll-behavior-y:none; }
 button,input,textarea { font:inherit; }
@@ -181,7 +193,7 @@ button,input,textarea { font:inherit; }
 .lang-option-check { opacity:.35; }
 .lang-option.active .lang-option-check { opacity:1; color:var(--accent-color); }
 @media (max-width:420px) { .settings-drawer { width:100vw; border-left:0; } }
-.chat-box { flex:1 1 auto; min-height:0; height:0; box-sizing:border-box; padding:16px 14px calc(var(--composer-height,70px) + var(--keyboard-offset,0px) + env(safe-area-inset-bottom) + 12px); overflow-y:auto; display:flex; flex-direction:column; overscroll-behavior:contain; background:var(--chat-bg); gap:4px; -webkit-overflow-scrolling:touch; position:relative; scroll-behavior:auto; overflow-anchor:none; touch-action:pan-y; }
+.chat-box { flex:1 1 auto; min-height:0; height:0; box-sizing:border-box; padding:16px 14px calc(var(--composer-height,70px) + var(--keyboard-content-inset,0px) + env(safe-area-inset-bottom) + 12px); overflow-y:auto; display:flex; flex-direction:column; overscroll-behavior:contain; background:var(--chat-bg); gap:4px; -webkit-overflow-scrolling:touch; position:relative; scroll-behavior:auto; overflow-anchor:none; touch-action:pan-y; }
 .chat-box::before { content:''; flex:1 1 auto; min-height:0; order:-1; pointer-events:none; }
 .msg-group { display:flex; flex-direction:column; margin-bottom:4px; width:fit-content; max-width:78%; position:relative; min-width:0; align-self:flex-start; touch-action:pan-y; }
 .msg-group.me { align-self:flex-end; }
@@ -283,6 +295,7 @@ button,input,textarea { font:inherit; }
 .theme-dot.mono { background:linear-gradient(135deg,#fff,#bdbdbd 50%,#333); }
 .theme-dot.light { background:linear-gradient(135deg,#ffffff,#d9fdd3 55%,#00a884); }
 .theme-dot.telegram { background:linear-gradient(135deg,#5eaad7,#3a8cbf); }
+.theme-dot.future-midnight { background:linear-gradient(135deg,#8ff7dc,#72b6ff 50%,#aa78ff); }
 .theme-option-name { flex:1; font-size:.8rem; font-weight:700; }
 .theme-option-check { opacity:0; font-size:.8rem; }
 .theme-option.active .theme-option-check { opacity:1; }
@@ -305,6 +318,15 @@ button,input,textarea { font:inherit; }
 .font-option-check { opacity:.35; font-size:.8rem; }
 .font-option.active .font-option-check { opacity:1; color:var(--accent-color); }
 .font-option-sample { font-size:.85rem; color:var(--text-muted); opacity:.85; }
+.emoji-option { width:100%; border:1px solid var(--glass-border); background:rgba(255,255,255,.035); color:var(--text-main); border-radius:12px; padding:10px 12px; margin-top:6px; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; text-align:right; transition:background .15s, border-color .15s, transform .15s; font:inherit; }
+.emoji-option:hover { background:rgba(255,255,255,.07); border-color:var(--accent-color); transform:translateY(-1px); }
+.emoji-option.active { border-color:var(--accent-color); background:rgba(255,255,255,.09); }
+.emoji-option-main { display:flex; align-items:center; gap:10px; min-width:0; }
+.emoji-sample, .emoji-glyph { font-family:var(--emoji-font,"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif); }
+.emoji-sample { font-size:1.35rem; line-height:1; }
+.emoji-option-name { font-weight:700; font-size:.88rem; }
+.emoji-option-check { opacity:.35; }
+.emoji-option.active .emoji-option-check { opacity:1; color:var(--accent-color); }
 .reaction-badge { display:flex; gap:3px; margin-top:4px; flex-wrap:wrap; }
 .reaction-badge span { background:var(--card-bg); border:1px solid var(--glass-border); border-radius:12px; padding:2px 6px; font-size:.75rem; animation:reactIn .3s ease; }
 @keyframes reactIn { from { transform:scale(.4); opacity:0; } to { transform:scale(1); opacity:1; } }
@@ -384,6 +406,12 @@ button,input,textarea { font:inherit; }
 :root[data-theme="telegram"] .msg-group .bubble { border-radius:18px !important; box-shadow:0 3px 9px rgba(0,0,0,.16); }
 :root[data-theme="telegram"] .msg-group.me .bubble { border-bottom-right-radius:6px !important; }
 :root[data-theme="telegram"] .msg-group.other .bubble { border-bottom-left-radius:6px !important; }
+:root[data-theme="future-midnight"] .header { background:rgba(6,11,22,.72); border-bottom:1px solid rgba(143,247,220,.2); box-shadow:0 4px 28px rgba(65,128,255,.14); }
+:root[data-theme="future-midnight"] .chat-box { background-image:radial-gradient(rgba(143,247,220,.08) 1px,transparent 1px),radial-gradient(rgba(116,147,255,.06) 1px,transparent 1px); background-size:34px 34px,52px 52px; }
+:root[data-theme="future-midnight"] .msg-group.me .bubble { background:var(--msg-me-bg); border:1px solid rgba(178,231,255,.18); }
+:root[data-theme="future-midnight"] .msg-group.other .bubble { background:rgba(11,29,48,.84); border:1px solid rgba(165,226,255,.11); backdrop-filter:blur(12px); }
+:root[data-theme="future-midnight"] .input-wrapper { border:1px solid rgba(143,247,220,.17); box-shadow:0 0 18px rgba(76,141,255,.1); }
+:root[data-theme="future-midnight"] .send-btn { background:var(--accent-gradient); color:#06101b; }
 :root[data-theme="whatsapp"] .chat-item { border-inline-start:3px solid transparent; }
 :root[data-theme="whatsapp"] .chat-item:hover { border-inline-start-color:var(--accent-color); }
 :root[data-theme="light"] .chat-item { box-shadow:0 1px 2px rgba(11,20,26,.06); }
@@ -701,6 +729,16 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
       <div class="settings-section-body" id="fonts-section-body"><div id="font-options-list"></div></div>
     </div>
     <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="emoji-section-body">
+        <span>Emoji style</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="emoji-section-body">
+        <button type="button" class="emoji-option" data-emoji-style="samsung"><span class="emoji-option-main"><span class="emoji-sample">😀✨👍</span><span class="emoji-option-name">Samsung</span></span><i class="fa-solid fa-check emoji-option-check"></i></button>
+        <button type="button" class="emoji-option" data-emoji-style="iphone"><span class="emoji-option-main"><span class="emoji-sample">😀✨👍</span><span class="emoji-option-name">Iphone</span></span><i class="fa-solid fa-check emoji-option-check"></i></button>
+        <button type="button" class="emoji-option" data-emoji-style="android"><span class="emoji-option-main"><span class="emoji-sample">😀✨👍</span><span class="emoji-option-name">Default Android</span></span><i class="fa-solid fa-check emoji-option-check"></i></button>
+      </div>
+    </div>
+    <div class="settings-section">
       <button type="button" class="settings-section-header" data-toggle-section="bubble-section-body">
         <span>Bubble Style</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
       </button>
@@ -862,6 +900,7 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
     <button type="button" class="action-item" id="act-edit" style="display:none;"><i class="fa-solid fa-pen"></i><span>Edit</span></button>
     <button type="button" class="action-item" id="act-copy"><i class="fa-regular fa-copy"></i><span>Copy text</span></button>
     <button type="button" class="action-item" id="act-custom-bg" style="display:none;"><i class="fa-solid fa-image"></i><span>Set Chat Background</span></button>
+    <button type="button" class="action-item danger" id="act-reset-bg" style="display:none;"><i class="fa-solid fa-rotate-left"></i><span>Reset to Default</span></button>
     <button type="button" class="action-item danger" id="act-delete" style="display:none;"><i class="fa-regular fa-trash-can"></i><span>Delete</span></button>
     <button type="button" class="action-item" id="act-cancel"><i class="fa-solid fa-xmark"></i><span>Cancel</span></button>
   </div>
@@ -920,6 +959,7 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
   <button type="button" class="theme-option" data-theme-option="mono"><span class="theme-dot mono"><i class="fa-solid fa-circle-half-stroke"></i></span><span class="theme-option-name">Mono</span><i class="fa-solid fa-check theme-option-check"></i></button>
   <button type="button" class="theme-option" data-theme-option="light"><span class="theme-dot light"><i class="fa-solid fa-sun"></i></span><span class="theme-option-name">Light</span><i class="fa-solid fa-check theme-option-check"></i></button>
 <button type="button" class="theme-option" data-theme-option="telegram"><span class="theme-dot telegram"><i class="fa-brands fa-telegram"></i></span><span class="theme-option-name">Telegram</span><i class="fa-solid fa-check theme-option-check"></i></button>
+  <button type="button" class="theme-option" data-theme-option="future-midnight"><span class="theme-dot future-midnight"><i class="fa-solid fa-moon"></i></span><span class="theme-option-name">Future Midnight</span><i class="fa-solid fa-check theme-option-check"></i></button>
 </div>
 
 <!-- ═══════ Watch Together Room ═══════ -->
@@ -1469,7 +1509,7 @@ function initLanguage() {
 }
 
 // ═══════ Theme ═══════
-const THEME_LIST = ['crimson','whatsapp','instagram','neon','mono','light','telegram'];
+const THEME_LIST = ['crimson','whatsapp','instagram','neon','mono','light','telegram','future-midnight'];
 function setTheme(theme) {
   if (!THEME_LIST.includes(theme)) theme = 'crimson';
   localStorage.setItem('private-chat-theme', theme);
@@ -1558,6 +1598,51 @@ function initFont() {
   ensureFontLoaded(cf);
   document.documentElement.style.setProperty('--user-font', `'${cf}',`);
   renderFontOptions();
+}
+
+// ═══════ Emoji Style ═══════
+const EMOJI_FONTS = {
+  samsung: '"SamsungColorEmoji","Noto Color Emoji","Segoe UI Emoji",sans-serif',
+  iphone: '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif',
+  android: '"Noto Color Emoji","Segoe UI Emoji","Apple Color Emoji",sans-serif'
+};
+function getCurrentEmojiStyle() {
+  try { return localStorage.getItem('private-chat-emoji') || 'android'; } catch(e) { return 'android'; }
+}
+function setEmojiStyle(style) {
+  if (!Object.prototype.hasOwnProperty.call(EMOJI_FONTS, style)) style = 'android';
+  try { localStorage.setItem('private-chat-emoji', style); } catch(e) {}
+  document.documentElement.style.setProperty('--emoji-font', EMOJI_FONTS[style]);
+  document.querySelectorAll('[data-emoji-style]').forEach(opt => opt.classList.toggle('active', opt.dataset.emojiStyle === style));
+  decorateEmoji(document.body);
+}
+function decorateEmoji(root) {
+  if (!root || !window.NodeFilter) return;
+  const pattern = /(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*(?:[\u{1F3FB}-\u{1F3FF}])?)/gu;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); const nodes = []; let node;
+  while ((node = walker.nextNode())) {
+    if (node.parentElement?.closest('script,style,textarea,input,.emoji-glyph')) continue;
+    pattern.lastIndex = 0; if (pattern.test(node.nodeValue || '')) nodes.push(node);
+  }
+  nodes.forEach(textNode => {
+    const text = textNode.nodeValue || ''; const fragment = document.createDocumentFragment(); let last = 0; let match;
+    pattern.lastIndex = 0;
+    while ((match = pattern.exec(text))) {
+      if (match.index > last) fragment.appendChild(document.createTextNode(text.slice(last, match.index)));
+      const span = document.createElement('span'); span.className = 'emoji-glyph'; span.textContent = match[0]; fragment.appendChild(span); last = match.index + match[0].length;
+    }
+    if (last < text.length) fragment.appendChild(document.createTextNode(text.slice(last)));
+    textNode.parentNode?.replaceChild(fragment, textNode);
+  });
+}
+function initEmojiStyle() {
+  setEmojiStyle(getCurrentEmojiStyle());
+  const observer = new MutationObserver(() => {
+    if (window.__emojiDecorateQueued) return;
+    window.__emojiDecorateQueued = true;
+    requestAnimationFrame(() => { window.__emojiDecorateQueued = false; decorateEmoji(document.body); });
+  });
+  observer.observe(document.body, { childList:true, subtree:true });
 }
 
 // ═══════ Sound Settings ═══════
@@ -2259,10 +2344,14 @@ function syncKeyboardPosition() {
   if (ko < 40 && !(vkOffset > 0 && focusedText)) ko = 0;
   const maxKeyboard = Math.round(Math.max(fallbackH, viewportH) * 0.70);
   ko = Math.min(ko, maxKeyboard);
+  // If the visual viewport already shrank, the screen height has absorbed the
+  // keyboard and chat content must not receive the same inset a second time.
+  const contentInset = ko > 0 && viewportH >= fallbackH - 40 ? ko : 0;
 
   root.style.setProperty('--viewport-height', viewportH + 'px');
   root.style.setProperty('--viewport-top', viewportTop + 'px');
   root.style.setProperty('--keyboard-offset', ko + 'px');
+  root.style.setProperty('--keyboard-content-inset', contentInset + 'px');
   root.style.setProperty('--keyboard-open', ko > 0 ? '1' : '0');
   _lastKeyboardOffset = ko;
   return ko;
@@ -3158,6 +3247,8 @@ function openMsgActions(group) {
   }
   const customBg = document.getElementById('act-custom-bg');
   if (customBg) customBg.style.display = 'flex';
+  const resetBg = document.getElementById('act-reset-bg');
+  if (resetBg) resetBg.style.display = getChatBg(currentChatFriend) ? 'flex' : 'none';
   const row = document.getElementById('reactions-row');
   row.innerHTML = '';
   REACTION_EMOJIS.forEach(e => {
@@ -4074,7 +4165,10 @@ document.addEventListener('click', e => {
     setBubbleStyle(el.dataset.bubbleStyle);
     return;
   }
-
+  if (t.closest('[data-emoji-style]')) {
+    setEmojiStyle(t.closest('[data-emoji-style]').dataset.emojiStyle);
+    return;
+  }
   if (t.closest('#poll-add-option')) { addPollOption(''); return; }
   if (t.closest('#poll-send-btn')) { createPoll(); return; }
   if (t.closest('#close-poll-btn')) { closePollModal(); return; }
@@ -4155,6 +4249,15 @@ document.addEventListener('click', e => {
       r.readAsDataURL(f);
     };
     inp.click();
+    return;
+  }
+  if (t.closest('#act-reset-bg')) {
+    closeMsgActions();
+    if (currentChatFriend) {
+      setChatBg(currentChatFriend, '');
+      applyCustomBg(currentChatFriend);
+      toast('Background reset to default ✓', 'success');
+    }
     return;
   }
   if (t.closest('#act-cancel') || (t.closest('#msg-actions-modal') && !t.closest('.action-sheet'))) {
@@ -4404,6 +4507,7 @@ function initApp() {
 startSecurityQuestionSettingWatch();
   initBubbleStyle();
   initFont();
+  initEmojiStyle();
   initLanguage();
   initSoundSettings();
   updateAuthUI();
