@@ -412,6 +412,34 @@ button,input,textarea { font:inherit; }
 :root[data-theme="future-midnight"] .msg-group.other .bubble { background:rgba(11,29,48,.84); border:1px solid rgba(165,226,255,.11); backdrop-filter:blur(12px); }
 :root[data-theme="future-midnight"] .input-wrapper { border:1px solid rgba(143,247,220,.17); box-shadow:0 0 18px rgba(76,141,255,.1); }
 :root[data-theme="future-midnight"] .send-btn { background:var(--accent-gradient); color:#06101b; }
+:root[data-theme="future-midnight"] #auth-screen,
+:root[data-theme="future-midnight"] #home-screen,
+:root[data-theme="future-midnight"] #chat-screen { background-color:#03050b; background-image:linear-gradient(rgba(3,5,11,.18),rgba(3,5,11,.32)),url('assets/future-midnight/login-bg.png'); background-size:cover; background-position:center; }
+:root[data-theme="future-midnight"] .auth-container { width:min(410px,calc(100% - 30px)); flex:0 0 auto; margin:auto; padding:30px 28px; border:1px solid rgba(156,139,255,.5); border-radius:28px; background:rgba(5,8,20,.68); box-shadow:0 0 0 1px rgba(123,92,255,.12),0 0 48px rgba(107,68,255,.22),inset 0 1px 0 rgba(255,255,255,.1); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+:root[data-theme="future-midnight"] #auth-icon { width:92px; height:92px; margin-bottom:14px; background:url('assets/future-midnight/ma-orbit-icon.png') center/contain no-repeat; font-size:0; filter:drop-shadow(0 0 18px rgba(123,95,255,.8)); }
+:root[data-theme="future-midnight"] .auth-container h2 { text-shadow:0 0 18px rgba(147,128,255,.65); }
+:root[data-theme="future-midnight"] .auth-input-wrapper { background:rgba(4,8,22,.72); border-color:rgba(145,122,255,.38); box-shadow:inset 0 0 18px rgba(92,73,255,.1); }
+:root[data-theme="future-midnight"] .primary-btn { background:var(--accent-gradient); box-shadow:0 0 22px rgba(112,90,255,.48); }
+:root[data-theme="future-midnight"] .header { backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+:root[data-theme="future-midnight"] #home-screen { background-image:linear-gradient(rgba(3,5,11,.48),rgba(3,5,11,.7)),url('assets/future-midnight/space-smooth-bg.png'); }
+:root[data-theme="future-midnight"] #auth-screen { background-image:linear-gradient(rgba(3,5,11,.2),rgba(3,5,11,.42)),url('assets/future-midnight/space-ultra-bg.png'); }
+:root[data-theme="future-midnight"] #home-screen .chat-list { background:transparent; }
+:root[data-theme="future-midnight"] #home-screen .chat-item { background:rgba(5,10,24,.63); border:1px solid rgba(131,117,255,.3); border-radius:20px; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 22px rgba(63,54,165,.12); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+:root[data-theme="future-midnight"] #home-screen .chat-item:hover { background:rgba(28,20,64,.72); border-color:#8e78ff; transform:translateY(-2px); }
+:root[data-theme="future-midnight"] #settings-drawer { background:linear-gradient(rgba(3,5,14,.86),rgba(3,5,14,.92)),url('assets/future-midnight/space-smooth-bg.png') center/cover; }
+:root[data-theme="future-midnight"] .settings-section { background:rgba(5,10,25,.62); border-color:rgba(137,117,255,.28); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+:root[data-theme="future-midnight"] .chat-box { background-image:linear-gradient(rgba(3,5,12,.3),rgba(3,5,12,.38)),url('assets/future-midnight/space-ultra-bg.png'); background-size:cover; background-position:center; }
+:root[data-theme="future-midnight"][data-chat-mode="smooth"] .chat-box { background-image:linear-gradient(rgba(3,5,12,.44),rgba(3,5,12,.52)),url('assets/future-midnight/space-smooth-bg.png'); }
+:root[data-theme="future-midnight"][data-chat-mode="smooth"] .msg-group .bubble { border-radius:22px !important; box-shadow:0 8px 28px rgba(34,48,130,.2); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+:root[data-theme="future-midnight"][data-chat-mode="ultra"] .msg-group .bubble { border-radius:12px 20px 12px 20px !important; box-shadow:0 0 20px rgba(103,75,255,.2),inset 0 1px 0 rgba(255,255,255,.13); }
+:root[data-theme="future-midnight"][data-chat-mode="ultra"] .chat-box { animation:futureDrift 14s ease-in-out infinite alternate; }
+:root[data-theme="future-midnight"][data-chat-mode="smooth"] .chat-box { animation:futureDrift 24s ease-in-out infinite alternate; }
+@keyframes futureDrift { from { background-position:48% 48%; } to { background-position:53% 52%; } }
+#chat-mode-toggle { display:none; align-items:center; justify-content:center; gap:5px; min-width:68px; height:30px; padding:0 9px; border:1px solid var(--glass-border); border-radius:15px; background:rgba(255,255,255,.06); color:var(--text-main); font-size:.66rem; font-weight:900; cursor:pointer; }
+#chat-mode-toggle i { color:var(--accent-color); font-size:.7rem; }
+:root[data-theme="future-midnight"] #chat-mode-toggle { display:inline-flex; border-color:rgba(143,247,220,.35); box-shadow:0 0 14px rgba(112,90,255,.2); }
+:root[data-theme="future-midnight"][data-chat-mode="ultra"] #chat-mode-toggle { background:linear-gradient(135deg,rgba(111,61,255,.58),rgba(32,136,255,.42)); }
+:root[data-theme="future-midnight"][data-chat-mode="smooth"] #chat-mode-toggle { background:rgba(143,247,220,.12); }
 :root[data-theme="whatsapp"] .chat-item { border-inline-start:3px solid transparent; }
 :root[data-theme="whatsapp"] .chat-item:hover { border-inline-start-color:var(--accent-color); }
 :root[data-theme="light"] .chat-item { box-shadow:0 1px 2px rgba(11,20,26,.06); }
@@ -798,6 +826,7 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
       <button type="button" class="chat-header-icon" id="chat-call-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
       <button type="button" class="chat-header-icon" id="chat-watch-btn" title="Watch Together"><i class="fa-solid fa-tv"></i></button>
       <button type="button" class="chat-header-icon" id="chat-wb-btn" title="Whiteboard"><i class="fa-solid fa-pen-ruler"></i></button>
+      <button type="button" id="chat-mode-toggle" title="Toggle chat mode"><i class="fa-solid fa-bolt"></i><span id="chat-mode-label">Ultra</span></button>
       <button type="button" class="theme-btn chat-header-icon chat-theme-small theme-toggle-btn" title="Theme"><i class="fa-solid fa-palette theme-icon"></i></button>
     </div>
   </div>
@@ -1515,6 +1544,7 @@ function setTheme(theme) {
   localStorage.setItem('private-chat-theme', theme);
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-option').forEach(opt => opt.classList.toggle('active', opt.dataset.themeOption === theme));
+  updateChatModeUI();
 }
 function getCurrentTheme() {
   try { return localStorage.getItem('private-chat-theme') || 'crimson'; } catch(e) { return 'crimson'; }
@@ -1532,6 +1562,26 @@ function closeThemePicker() {
   if (p) p.classList.remove('show');
 }
 function initTheme() { setTheme(getCurrentTheme()); }
+
+// ═══════ Future Midnight Chat Mode ═══════
+function getCurrentChatMode() {
+  try { return localStorage.getItem('future-midnight-chat-mode') || 'ultra'; } catch(e) { return 'ultra'; }
+}
+function setChatMode(mode) {
+  if (!['ultra','smooth'].includes(mode)) mode = 'ultra';
+  try { localStorage.setItem('future-midnight-chat-mode', mode); } catch(e) {}
+  document.documentElement.setAttribute('data-chat-mode', mode);
+  updateChatModeUI();
+}
+function updateChatModeUI() {
+  const mode = getCurrentChatMode();
+  document.documentElement.setAttribute('data-chat-mode', mode);
+  const label = document.getElementById('chat-mode-label');
+  const button = document.getElementById('chat-mode-toggle');
+  if (label) label.textContent = mode === 'ultra' ? 'Ultra' : 'Smooth';
+  if (button) button.title = mode === 'ultra' ? 'Switch to Smooth' : 'Switch to Ultra';
+}
+function toggleChatMode() { setChatMode(getCurrentChatMode() === 'ultra' ? 'smooth' : 'ultra'); }
 
 // ═══════ Bubble Style ═══════
 function setBubbleStyle(style) {
@@ -4187,6 +4237,7 @@ document.addEventListener('click', e => {
   if (t.closest('#chat-call-btn')) { toast(tr('chat.call_soon')); return; }
   if (t.closest('#chat-watch-btn')) { openWatchRoom(); return; }
   if (t.closest('#chat-wb-btn')) { openWhiteboard(); return; }
+  if (t.closest('#chat-mode-toggle')) { toggleChatMode(); return; }
 
   if (t.closest('#chat-avatar') && !t.closest('.chat-item')) {
     openStats();
