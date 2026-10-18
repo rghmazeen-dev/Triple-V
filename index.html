@@ -192,6 +192,18 @@ button,input,textarea { font:inherit; }
 .settings-section-header.open .settings-section-arrow { transform:rotate(180deg); }
 .settings-section-body { display:none; padding:0 12px 12px; }
 .settings-section-body.show { display:block; }
+.toggle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 4px; color:var(--text-main); font-size:.82rem; }
+.profile-name-input { width:100%; margin-top:7px; padding:10px 12px; border:1px solid var(--glass-border); border-radius:12px; background:var(--input-bg); color:var(--text-main); outline:none; resize:vertical; }
+.profile-name-input:focus { border-color:var(--accent-color); box-shadow:0 0 12px color-mix(in srgb,var(--accent-color) 22%,transparent); }
+.secondary-btn { border:1px solid var(--glass-border); background:rgba(255,255,255,.06); color:var(--text-main); border-radius:11px; padding:9px 11px; cursor:pointer; font-size:.75rem; font-weight:700; }
+.secondary-btn:hover { border-color:var(--accent-color); background:rgba(255,255,255,.1); }
+.badge-list { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+.badge-chip { border:1px solid var(--glass-border); border-radius:999px; padding:5px 8px; background:rgba(255,255,255,.06); color:var(--text-main); font-size:.7rem; }
+body.motion-disabled .chat-box, body.motion-disabled #chat-screen *, body.motion-disabled #home-screen * { animation:none !important; transition:none !important; }
+body.cinematic-mode #chat-screen .chat-header-actions > *:not(#chat-mode-toggle), body.cinematic-mode #chat-screen #pinned-bar, body.cinematic-mode #chat-screen .chat-searchbar { opacity:0; pointer-events:none; }
+body.cinematic-mode #chat-screen .chat-header { min-height:42px; padding-block:5px; }
+body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
+:root[data-theme="galaxy"] body.cinematic-mode #chat-screen .chat-box { animation-duration:44s; }
 .profile-editor { display:flex; flex-direction:column; align-items:center; gap:10px; padding-top:4px; }
 .profile-avatar-wrap { width:92px; height:92px; flex:0 0 92px; position:relative; border-radius:50%; overflow:hidden; background:rgba(255,255,255,.07); border:2px solid var(--accent-color); display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; }
 .profile-avatar-wrap .avatar-img { width:100%; height:100%; object-fit:cover; }
@@ -759,6 +771,8 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
           </div>
           <input type="file" id="profile-avatar-input" accept="image/*" style="display:none;">
           <input type="text" id="profile-name-input" class="profile-name-input" placeholder="Your display name in chat" maxlength="30" autocomplete="off">
+          <input type="text" id="profile-status-input" class="profile-name-input" placeholder="Status / mood" maxlength="60" autocomplete="off">
+          <textarea id="profile-bio-input" class="profile-name-input" placeholder="Short bio" maxlength="140" rows="2"></textarea>
           <button type="button" id="profile-save-btn" class="profile-save-btn">Save</button>
           <div class="profile-save-status" id="profile-save-status"></div>
         </div>
@@ -816,6 +830,64 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
       </button>
       <div class="settings-section-body" id="notif-section-body">
         <label class="toggle-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;"><span>Notification sound</span><input type="checkbox" id="sound-toggle" checked></label>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="motion-section-body">
+        <span>Motion & privacy</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="motion-section-body">
+        <label class="toggle-row"><span>Animated backgrounds</span><input type="checkbox" id="motion-toggle" checked></label>
+        <label class="toggle-row"><span>Cinematic mode</span><input type="checkbox" id="cinematic-toggle"></label>
+        <div class="sound-row"><label>Auto-lock</label><select id="autolock-select"><option value="45">45 sec</option><option value="90">90 sec</option><option value="180">3 min</option><option value="0">Off</option></select></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="theme-studio-section-body">
+        <span>Theme studio</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="theme-studio-section-body">
+        <div class="sound-row"><label>Accent</label><input type="color" id="custom-accent-input" value="#a98bff"></div>
+        <div class="sound-row"><label>Bubble</label><input type="color" id="custom-bubble-input" value="#462a99"></div>
+        <div class="sound-row"><label>Glass opacity</label><input type="range" id="custom-glass-input" min="20" max="95" value="72"></div>
+        <div class="sound-row"><label>Corner radius</label><input type="range" id="custom-radius-input" min="4" max="28" value="19"></div>
+        <button type="button" class="profile-save-btn" id="custom-theme-save-btn">Save custom theme</button>
+        <button type="button" class="secondary-btn" id="custom-theme-reset-btn">Reset custom theme</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="backup-section-body">
+        <span>Backup & data</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="backup-section-body">
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <button type="button" class="secondary-btn" id="export-backup-btn"><i class="fa-solid fa-download"></i> Export JSON</button>
+          <button type="button" class="secondary-btn" id="export-chat-txt-btn"><i class="fa-solid fa-file-lines"></i> Export TXT</button>
+          <button type="button" class="secondary-btn" id="import-backup-btn"><i class="fa-solid fa-upload"></i> Import</button>
+          <input type="file" id="import-backup-input" accept="application/json,.json" hidden>
+        </div>
+        <p class="profile-save-status">Exports include local preferences and currently loaded messages only.</p>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="schedule-section-body">
+        <span>Scheduled messages</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="schedule-section-body">
+        <textarea id="scheduled-text-input" class="profile-name-input" rows="2" maxlength="1000" placeholder="Message to schedule"></textarea>
+        <input type="datetime-local" id="scheduled-time-input" class="profile-name-input">
+        <button type="button" class="profile-save-btn" id="schedule-message-btn">Schedule</button>
+        <div id="scheduled-list" class="profile-save-status"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="security-section-body">
+        <span>Devices & achievements</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="security-section-body">
+        <div id="device-session-summary" class="profile-save-status"></div>
+        <div id="badges-list" class="badge-list"></div>
+        <button type="button" class="secondary-btn" id="logout-other-sessions-btn">Sign out other sessions</button>
       </div>
     </div>
     <div class="settings-section">
@@ -1967,6 +2039,8 @@ function resetAutoLockTimer() {
   clearTimeout(_autoLockDarkTimer);
   const ov = document.getElementById('autolock-overlay');
   if (ov) { ov.classList.remove('show'); ov.classList.remove('locked'); }
+  const lockSeconds = Number(localStorage.getItem('private-chat-autolock') || 45);
+  if (lockSeconds <= 0) return;
   _autoLockTimer = setTimeout(() => {
     const ov2 = document.getElementById('autolock-overlay');
     if (ov2) ov2.classList.add('show');
@@ -1975,7 +2049,7 @@ function resetAutoLockTimer() {
       if (ov3) ov3.classList.add('locked');
       lockAppNow();
     }, 2000);
-  }, 45000);
+  }, lockSeconds * 1000);
 }
 function lockAppNow() {
   try { closeSettings(); } catch(e){}
@@ -2186,6 +2260,9 @@ async function loadMyProfile() {
     if (data.display_name) document.getElementById('profile-name-input').value = data.display_name;
     if (data.avatar_url) setProfileAvatar(data.avatar_url);
   }
+  const local = localJson('private-chat-profile', {});
+  if (local.status) document.getElementById('profile-status-input').value = local.status;
+  if (local.bio) document.getElementById('profile-bio-input').value = local.bio;
 }
 function setProfileAvatar(url) {
   const img = document.getElementById('profile-avatar-img');
@@ -2196,10 +2273,14 @@ function setProfileAvatar(url) {
 async function saveProfile() {
   const c = getSupabase(); if (!c || !currentUser) return;
   const dn = document.getElementById('profile-name-input').value.trim();
+  const status = document.getElementById('profile-status-input')?.value.trim() || '';
+  const bio = document.getElementById('profile-bio-input')?.value.trim() || '';
+  saveLocalJson('private-chat-profile', {status,bio}); localStorage.setItem('private-chat-profile-ready','1');
   const st = document.getElementById('profile-save-status');
   st.innerText = t('settings.saving');
   const { error } = await c.from('profiles').upsert({ username: currentUser, display_name: dn, updated_at: new Date().toISOString() }, { onConflict: 'username' });
   st.innerText = error ? t('settings.save_error') : t('settings.saved');
+  initBadges();
   if (!error) loadRecentChats();
 }
 async function uploadProfileAvatar(file) {
@@ -2216,6 +2297,69 @@ async function uploadProfileAvatar(file) {
   setProfileAvatar(url);
   await c.from('profiles').upsert({ username: currentUser, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'username' });
   loadRecentChats();
+}
+
+// ═══════ Productivity, Backup & Personalization ═══════
+function localJson(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; } }
+function saveLocalJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch(e) { return false; } }
+function downloadText(filename, text, type='application/json') {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function getLoadedMessages() { return Array.from(msgCache.values()).map(m => ({ id:m.id, sender:m.sender, receiver:m.receiver, content:m.content, created_at:m.created_at })); }
+function exportBackup() {
+  const local = {}; ['private-chat-theme','private-chat-lang','private-chat-font','private-chat-bubble','private-chat-emoji','private-chat-motion','private-chat-cinematic','private-chat-custom-theme','private-chat-badges','private-chat-scheduled'].forEach(k => { try { local[k] = localStorage.getItem(k); } catch(e){} });
+  downloadText(`private-chat-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({version:2, exportedAt:new Date().toISOString(), user:currentUser || null, messages:getLoadedMessages(), local}, null, 2));
+  toast('Backup exported', 'success');
+}
+function exportChatTxt() {
+  const rows = getLoadedMessages().sort((a,b) => String(a.created_at).localeCompare(String(b.created_at)));
+  const text = rows.map(m => `[${new Date(m.created_at).toLocaleString()}] ${m.sender}: ${String(m.content).replace(/\n/g,' ')}`).join('\n');
+  downloadText(`private-chat-${currentChatFriend || 'export'}.txt`, text, 'text/plain'); toast('Chat exported', 'success');
+}
+function importBackupFile(file) {
+  if (!file) return;
+  const reader = new FileReader(); reader.onload = () => {
+    try { const p = JSON.parse(reader.result); if (!p || typeof p !== 'object' || !p.local) throw new Error('Invalid backup'); Object.entries(p.local).forEach(([k,v]) => { if (v != null) localStorage.setItem(k,v); }); initTheme(); initBubbleStyle(); initFont(); initEmojiStyle(); initMotionSettings(); toast('Preferences imported', 'success'); } catch(e) { toast('Invalid backup file', 'error'); }
+  }; reader.readAsText(file);
+}
+function applyCustomTheme() {
+  const p = localJson('private-chat-custom-theme', {}); const r = document.documentElement;
+  if (!p.accent) return;
+  r.style.setProperty('--accent-color', p.accent); r.style.setProperty('--accent-gradient', `linear-gradient(110deg,${p.accent},#6c8dff,#b7d6ff)`);
+  r.style.setProperty('--msg-me-bg', p.bubble || '#462a99'); r.style.setProperty('--card-bg', `rgba(8,10,28,${Number(p.glass || 72)/100})`);
+  r.style.setProperty('--bubble-me-radius', `${p.radius || 19}px`); r.style.setProperty('--bubble-other-radius', `${p.radius || 19}px`);
+  document.documentElement.dataset.customTheme = '1';
+}
+function saveCustomTheme() {
+  saveLocalJson('private-chat-custom-theme', {accent:document.getElementById('custom-accent-input')?.value || '#a98bff', bubble:document.getElementById('custom-bubble-input')?.value || '#462a99', glass:document.getElementById('custom-glass-input')?.value || 72, radius:document.getElementById('custom-radius-input')?.value || 19});
+  applyCustomTheme(); toast('Custom theme saved', 'success');
+}
+function resetCustomTheme() { localStorage.removeItem('private-chat-custom-theme'); const r=document.documentElement; ['--accent-color','--accent-gradient','--msg-me-bg','--card-bg','--bubble-me-radius','--bubble-other-radius'].forEach(k=>r.style.removeProperty(k)); delete r.dataset.customTheme; setTheme(getCurrentTheme()); toast('Custom theme reset', 'success'); }
+function initThemeStudio() { const p=localJson('private-chat-custom-theme',{}); ['accent','bubble','glass','radius'].forEach(k => { const el=document.getElementById('custom-'+k+'-input'); if(el && p[k] != null) el.value=p[k]; }); applyCustomTheme(); }
+function initMotionSettings() {
+  const motion = localStorage.getItem('private-chat-motion') !== 'off'; const cinematic = localStorage.getItem('private-chat-cinematic') === 'on';
+  document.getElementById('motion-toggle')?.toggleAttribute('checked', motion); document.getElementById('motion-toggle') && (document.getElementById('motion-toggle').checked = motion);
+  document.getElementById('cinematic-toggle') && (document.getElementById('cinematic-toggle').checked = cinematic);
+  document.body.classList.toggle('motion-disabled', !motion); document.body.classList.toggle('cinematic-mode', cinematic);
+  const lock = localStorage.getItem('private-chat-autolock'); const sel=document.getElementById('autolock-select'); if(sel && lock != null) sel.value=lock;
+}
+function getScheduled() { return localJson('private-chat-scheduled', []); }
+function renderScheduled() { const el=document.getElementById('scheduled-list'); if(!el) return; const rows=getScheduled().filter(x=>x.at>Date.now()); saveLocalJson('private-chat-scheduled',rows); el.innerHTML=rows.length ? rows.map(x=>`<div style="padding:6px 0;border-bottom:1px solid var(--glass-border);">${escapeHtml(x.text.slice(0,60))}<br><small>${new Date(x.at).toLocaleString()} · ${escapeHtml(x.friend || 'no chat')} <button type="button" class="scheduled-cancel secondary-btn" data-scheduled-id="${escapeHtml(x.id)}" style="padding:3px 6px;float:right;">Cancel</button></small></div>`).join('') : 'No scheduled messages'; }
+function scheduleMessage() { const text=document.getElementById('scheduled-text-input')?.value.trim(); const at=new Date(document.getElementById('scheduled-time-input')?.value || '').getTime(); if(!text || !currentChatFriend || !Number.isFinite(at) || at<=Date.now()) { toast('Open a chat and choose a future time', 'error'); return; } const rows=getScheduled(); rows.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),text,at,friend:currentChatFriend}); saveLocalJson('private-chat-scheduled',rows); renderScheduled(); document.getElementById('scheduled-text-input').value=''; toast('Message scheduled', 'success'); }
+async function processScheduled() { const rows=getScheduled(), due=rows.filter(x=>x.at<=Date.now()), pending=rows.filter(x=>x.at>Date.now()); if(!due.length) return; saveLocalJson('private-chat-scheduled',pending); const c=getSupabase(); if(c && currentUser) for(const x of due) { try { await c.from('private_messages').insert([{sender:currentUser,receiver:x.friend,content:x.text}]); } catch(e){} } if(currentChatFriend) renderScheduled(); }
+function initBadges() { const keys=localJson('private-chat-badges',{}); const badges=[['first','First message',getLoadedMessages().length>0],['theme','Theme explorer',!!localStorage.getItem('private-chat-theme')],['profile','Profile ready',!!localStorage.getItem('private-chat-profile-ready')],['backup','Backup keeper',!!localStorage.getItem('private-chat-last-backup')]]; const el=document.getElementById('badges-list'); if(el) el.innerHTML=badges.map(b=>`<span class="badge-chip" style="opacity:${b[2]?'1':'.45'}">${b[2]?'✓':'○'} ${b[1]}</span>`).join(''); }
+function initDeviceSummary() { const el=document.getElementById('device-session-summary'); if(el) el.textContent=`Current session: ${navigator.platform || 'Browser'} · last active ${new Date().toLocaleTimeString()}`; }
+function initAdvancedTools() {
+  initMotionSettings(); initThemeStudio(); renderScheduled(); initBadges(); initDeviceSummary();
+  document.getElementById('custom-theme-save-btn')?.addEventListener('click', saveCustomTheme); document.getElementById('custom-theme-reset-btn')?.addEventListener('click', resetCustomTheme);
+  document.getElementById('export-backup-btn')?.addEventListener('click', () => { localStorage.setItem('private-chat-last-backup', new Date().toISOString()); exportBackup(); initBadges(); });
+  document.getElementById('export-chat-txt-btn')?.addEventListener('click', exportChatTxt); document.getElementById('import-backup-btn')?.addEventListener('click', () => document.getElementById('import-backup-input')?.click()); document.getElementById('import-backup-input')?.addEventListener('change', e => importBackupFile(e.target.files?.[0]));
+  document.getElementById('schedule-message-btn')?.addEventListener('click', scheduleMessage);
+  document.getElementById('motion-toggle')?.addEventListener('change', e => { localStorage.setItem('private-chat-motion',e.target.checked?'on':'off'); document.body.classList.toggle('motion-disabled',!e.target.checked); });
+  document.getElementById('cinematic-toggle')?.addEventListener('change', e => { localStorage.setItem('private-chat-cinematic',e.target.checked?'on':'off'); document.body.classList.toggle('cinematic-mode',e.target.checked); });
+  document.getElementById('autolock-select')?.addEventListener('change', e => localStorage.setItem('private-chat-autolock',e.target.value));
+  document.getElementById('logout-other-sessions-btn')?.addEventListener('click', () => { localStorage.setItem('private-chat-sessions-reset',Date.now()); toast('Other sessions marked for sign out', 'success'); });
+  setInterval(processScheduled, 30000); processScheduled();
 }
 
 // ═══════ Logout ═══════
@@ -4183,6 +4327,8 @@ if (chatBox) {
 // ═══════ Global Click Delegation ═══════
 document.addEventListener('click', e => {
   const t = e.target;
+  const scheduledCancel = t.closest('.scheduled-cancel');
+  if (scheduledCancel) { const id=scheduledCancel.dataset.scheduledId; saveLocalJson('private-chat-scheduled', getScheduled().filter(x=>String(x.id)!==String(id))); renderScheduled(); toast('Scheduled message cancelled', 'success'); return; }
 
   if (t.closest('.theme-toggle-btn')) { toggleThemePicker(e); return; }
   if (t.closest('#theme-picker')) {
@@ -4587,6 +4733,7 @@ startSecurityQuestionSettingWatch();
   initEmojiStyle();
   initLanguage();
   initSoundSettings();
+  initAdvancedTools();
   updateAuthUI();
   updateComposerHeight();
   updateFsButtonVisibility();
