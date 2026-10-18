@@ -199,26 +199,8 @@ button,input,textarea { font:inherit; }
 .secondary-btn:hover { border-color:var(--accent-color); background:rgba(255,255,255,.1); }
 .badge-list { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
 .badge-chip { border:1px solid var(--glass-border); border-radius:999px; padding:5px 8px; background:rgba(255,255,255,.06); color:var(--text-main); font-size:.7rem; }
-.theme-studio-overlay { position:fixed; inset:0; z-index:700; display:none; background:radial-gradient(circle at 12% 10%,rgba(112,82,255,.2),transparent 32%),#04050d; color:#f7f4ff; overflow:auto; }
-.theme-studio-overlay.show { display:block; animation:studioIn .22s ease-out; }
-@keyframes studioIn { from{opacity:0;transform:scale(.985)} to{opacity:1;transform:scale(1)} }
-.theme-studio-shell { min-height:100%; max-width:1360px; margin:auto; padding:clamp(20px,4vw,54px); box-sizing:border-box; }
-.theme-studio-head { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:28px; }
-.theme-studio-head h2 { margin-top:4px; font-size:clamp(1.7rem,3vw,2.7rem); letter-spacing:-.04em; }
-.eyebrow { color:#a98bff; font-size:.68rem; letter-spacing:.18em; font-weight:900; }
-.theme-studio-close { width:46px; height:46px; border:1px solid rgba(255,255,255,.16); border-radius:50%; background:rgba(255,255,255,.06); color:#fff; cursor:pointer; font-size:1.1rem; }
-.theme-studio-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr); gap:24px; align-items:start; }
-.theme-studio-preview { min-height:650px; border:1px solid rgba(172,145,255,.35); border-radius:30px; position:relative; overflow:hidden; background:radial-gradient(circle at 70% 25%,rgba(103,74,224,.45),transparent 25%),linear-gradient(145deg,#0a0e29,#03040d 70%); box-shadow:0 0 70px rgba(80,48,210,.2),inset 0 1px 0 rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
-.theme-studio-preview::before,.theme-studio-preview::after { content:''; position:absolute; border:1px solid rgba(144,119,255,.2); border-radius:50%; width:720px; height:260px; transform:rotate(-28deg); box-shadow:0 0 28px rgba(106,72,255,.25); }
-.theme-studio-preview::after { width:520px; height:180px; transform:rotate(34deg); opacity:.6; }
-.studio-orbit { position:absolute; width:10px; height:10px; border-radius:50%; background:#c8b8ff; box-shadow:0 0 24px 8px #8970ff; top:22%; right:24%; }
-.studio-preview-card { width:min(430px,82%); position:relative; z-index:2; padding:18px; border:1px solid rgba(194,178,255,.36); border-radius:24px; background:rgba(7,8,28,.7); backdrop-filter:blur(18px); box-shadow:0 25px 65px rgba(0,0,0,.42),0 0 34px rgba(100,72,238,.2); }
-.studio-preview-top { display:flex; align-items:center; gap:10px; padding-bottom:18px; border-bottom:1px solid rgba(255,255,255,.1); }.studio-preview-top strong,.studio-preview-top small { display:block; }.studio-preview-top small { color:#aaa5c7; font-size:.72rem; margin-top:3px; }.studio-preview-top > i { margin-inline-start:auto; color:#aaa5c7; }.studio-avatar { width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#a98bff,#5b76ff);font-weight:900;box-shadow:0 0 20px rgba(140,105,255,.5); }
-.studio-bubbles { display:flex; flex-direction:column; gap:12px; padding:28px 0; }.studio-bubble { width:max-content; max-width:78%; padding:11px 14px; border-radius:19px; font-size:.85rem; }.studio-bubble.incoming { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); }.studio-bubble.outgoing { margin-inline-start:auto; background:linear-gradient(120deg,#542eb2,#386cd4); box-shadow:0 0 22px rgba(88,57,206,.3); }.studio-composer { padding:12px 14px; border-radius:16px; color:#9f9bb7; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.1); }.studio-composer i { float:right; color:#b9a4ff; }
-.theme-studio-controls { display:flex; flex-direction:column; gap:12px; }.studio-control-group { border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:16px; background:rgba(255,255,255,.045); }.studio-control-group h3 { font-size:.9rem; margin-bottom:13px; }.studio-control-group label { display:block; color:#bbb5d2; font-size:.75rem; margin-top:10px; }.studio-control-group input[type=text],.studio-control-group select { width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.14); background:#0c0d20; color:#fff; }.studio-control-group input[type=range] { width:calc(100% - 45px); accent-color:#a98bff; margin-top:10px; }.studio-control-group output { float:right; color:#aa93ff; font-size:.75rem; }.color-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.color-grid label { margin:0; }.color-grid input[type=color] { width:100%; height:38px; margin-top:6px; border:0; background:none; }.studio-actions { display:flex; gap:10px; }.studio-actions > * { flex:1; }
 .chat-item { min-height:76px; padding:12px 14px; border-radius:18px; margin-bottom:8px; background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); }.chat-item .avatar { width:50px; height:50px; flex-basis:50px; box-shadow:0 0 18px rgba(93,101,255,.22); }.chat-item-main { flex:1; min-width:0; }.chat-item-name-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }.chat-item-name-row h4 { font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.chat-item-time { color:var(--text-muted); font-size:.68rem; white-space:nowrap; }.chat-item-preview { display:block; color:var(--text-muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.78rem; margin-top:5px; }.chat-item-sender { color:var(--accent-color); font-weight:800; margin-inline-end:4px; }.chat-item.unread .chat-item-preview { color:var(--text-main); font-weight:700; }.chat-item.unread { border-color:color-mix(in srgb,var(--accent-color) 45%,transparent); }
 .chat-header-actions > .chat-header-icon:not(#chat-call-btn):not(.theme-btn), .chat-header-actions > #chat-mode-toggle { display:none !important; }.chat-header-actions > .theme-btn { display:flex !important; }
-@media (max-width:760px) { .theme-studio-grid { grid-template-columns:1fr; }.theme-studio-preview { min-height:470px; order:0; }.theme-studio-controls { order:1; }.theme-studio-shell { padding:18px 14px 30px; }.theme-studio-head { margin-bottom:16px; } }
 body.motion-disabled .chat-box, body.motion-disabled #chat-screen *, body.motion-disabled #home-screen * { animation:none !important; transition:none !important; }
 body.cinematic-mode #chat-screen .chat-header-actions > *:not(#chat-mode-toggle), body.cinematic-mode #chat-screen #pinned-bar, body.cinematic-mode #chat-screen .chat-searchbar { opacity:0; pointer-events:none; }
 body.cinematic-mode #chat-screen .chat-header { min-height:42px; padding-block:5px; }
@@ -867,15 +849,6 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
       </div>
     </div>
     <div class="settings-section">
-      <button type="button" class="settings-section-header" data-toggle-section="theme-studio-section-body">
-        <span>Theme studio</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
-      </button>
-      <div class="settings-section-body" id="theme-studio-section-body">
-        <p class="profile-save-status" style="text-align:start;margin-bottom:8px;">Build every part of your own theme in a full-screen studio.</p>
-        <button type="button" class="profile-save-btn" id="open-theme-studio-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Open full Theme Studio</button>
-      </div>
-    </div>
-    <div class="settings-section">
       <button type="button" class="settings-section-header" data-toggle-section="backup-section-body">
         <span>Backup & data</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
       </button>
@@ -912,22 +885,6 @@ body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
     </div>
     <div class="settings-section">
       <button type="button" id="logout-btn" class="logout-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:13px;padding:12px;cursor:pointer;font:inherit;font-weight:800;"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
-    </div>
-  </div>
-</div>
-<!-- ═══════ Full Theme Studio ═══════ -->
-<div id="theme-studio-overlay" class="theme-studio-overlay" aria-hidden="true">
-  <div class="theme-studio-shell">
-    <header class="theme-studio-head"><div><span class="eyebrow">PERSONAL DESIGN LAB</span><h2>Theme Studio</h2></div><button type="button" class="theme-studio-close" id="close-theme-studio-btn"><i class="fa-solid fa-xmark"></i></button></header>
-    <div class="theme-studio-grid">
-      <section class="theme-studio-preview" id="theme-studio-preview"><div class="studio-orbit"></div><div class="studio-preview-card"><div class="studio-preview-top"><span class="studio-avatar">A</span><div><strong>Galaxy contact</strong><small>Online now</small></div><i class="fa-solid fa-ellipsis"></i></div><div class="studio-bubbles"><div class="studio-bubble incoming">A quiet universe.</div><div class="studio-bubble outgoing">Make it yours ✦</div></div><div class="studio-composer">Write a message <i class="fa-solid fa-paper-plane"></i></div></div></section>
-      <section class="theme-studio-controls">
-        <div class="studio-control-group"><h3>Identity</h3><label>Theme name<input id="studio-theme-name" type="text" maxlength="30" value="My Galaxy"></label><label>Base mood<select id="studio-mood"><option value="galaxy">Galaxy</option><option value="midnight">Midnight</option><option value="ocean">Ocean</option><option value="ember">Ember</option></select></label></div>
-        <div class="studio-control-group"><h3>Color system</h3><div class="color-grid"><label>Accent<input id="studio-accent" type="color" value="#a98bff"></label><label>Secondary<input id="studio-secondary" type="color" value="#6c8dff"></label><label>Background<input id="studio-background" type="color" value="#02030a"></label><label>Bubble<input id="studio-bubble" type="color" value="#462a99"></label></div></div>
-        <div class="studio-control-group"><h3>Surface & shape</h3><label>Glass opacity <output id="studio-glass-output">72%</output><input id="studio-glass" type="range" min="15" max="95" value="72"></label><label>Bubble roundness <output id="studio-radius-output">19px</output><input id="studio-radius" type="range" min="2" max="30" value="19"></label><label>Glow intensity <output id="studio-glow-output">45%</output><input id="studio-glow" type="range" min="0" max="100" value="45"></label></div>
-        <div class="studio-control-group"><h3>Motion & wallpaper</h3><label>Wallpaper<select id="studio-wallpaper"><option value="galaxy">Galaxy nebula</option><option value="midnight">Midnight gradient</option><option value="none">Solid color</option></select></label><label class="toggle-row"><span>Ambient motion</span><input id="studio-motion" type="checkbox" checked></label><label class="toggle-row"><span>Star particles</span><input id="studio-stars" type="checkbox" checked></label></div>
-        <div class="studio-actions"><button type="button" class="secondary-btn" id="studio-reset-btn">Reset</button><button type="button" class="profile-save-btn" id="studio-save-btn">Save & apply theme</button></div>
-      </section>
     </div>
   </div>
 </div>
@@ -2352,7 +2309,7 @@ function downloadText(filename, text, type='application/json') {
 }
 function getLoadedMessages() { return Array.from(msgCache.values()).map(m => ({ id:m.id, sender:m.sender, receiver:m.receiver, content:m.content, created_at:m.created_at })); }
 function exportBackup() {
-  const local = {}; ['private-chat-theme','private-chat-lang','private-chat-font','private-chat-bubble','private-chat-emoji','private-chat-motion','private-chat-cinematic','private-chat-custom-theme','private-chat-badges','private-chat-scheduled'].forEach(k => { try { local[k] = localStorage.getItem(k); } catch(e){} });
+  const local = {}; ['private-chat-theme','private-chat-lang','private-chat-font','private-chat-bubble','private-chat-emoji','private-chat-motion','private-chat-cinematic','private-chat-badges','private-chat-scheduled'].forEach(k => { try { local[k] = localStorage.getItem(k); } catch(e){} });
   downloadText(`private-chat-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({version:2, exportedAt:new Date().toISOString(), user:currentUser || null, messages:getLoadedMessages(), local}, null, 2));
   toast('Backup exported', 'success');
 }
@@ -2367,35 +2324,6 @@ function importBackupFile(file) {
     try { const p = JSON.parse(reader.result); if (!p || typeof p !== 'object' || !p.local) throw new Error('Invalid backup'); Object.entries(p.local).forEach(([k,v]) => { if (v != null) localStorage.setItem(k,v); }); initTheme(); initBubbleStyle(); initFont(); initEmojiStyle(); initMotionSettings(); toast('Preferences imported', 'success'); } catch(e) { toast('Invalid backup file', 'error'); }
   }; reader.readAsText(file);
 }
-function applyCustomTheme() {
-  const p = localJson('private-chat-custom-theme', {}); const r = document.documentElement;
-  if (!p.accent) return;
-  r.style.setProperty('--accent-color', p.accent); r.style.setProperty('--accent-gradient', `linear-gradient(110deg,${p.accent},#6c8dff,#b7d6ff)`);
-  r.style.setProperty('--msg-me-bg', p.bubble || '#462a99'); r.style.setProperty('--card-bg', `rgba(8,10,28,${Number(p.glass || 72)/100})`);
-  r.style.setProperty('--bubble-me-radius', `${p.radius || 19}px`); r.style.setProperty('--bubble-other-radius', `${p.radius || 19}px`);
-  document.documentElement.dataset.customTheme = '1';
-  const wallpaper = p.wallpaper === 'none' ? '' : p.wallpaper === 'midnight' ? `radial-gradient(circle at 70% 20%,${p.accent}33,transparent 30%),linear-gradient(145deg,${p.background || '#070916'},#03040d)` : p.wallpaper === 'galaxy' ? `radial-gradient(circle at 70% 20%,${p.accent}44,transparent 28%),radial-gradient(circle at 20% 70%,${p.secondary || '#6c8dff'}22,transparent 35%),linear-gradient(145deg,${p.background || '#02030a'},#03040d)` : '';
-  ['auth-screen','home-screen','chat-screen'].forEach(id => { const el=document.getElementById(id); if(el && wallpaper) { el.style.backgroundImage=wallpaper; el.style.backgroundSize='cover'; } });
-  document.body.classList.toggle('motion-disabled', p.motion === false);
-}
-function saveCustomTheme() {
-  saveLocalJson('private-chat-custom-theme', {accent:document.getElementById('custom-accent-input')?.value || '#a98bff', bubble:document.getElementById('custom-bubble-input')?.value || '#462a99', glass:document.getElementById('custom-glass-input')?.value || 72, radius:document.getElementById('custom-radius-input')?.value || 19});
-  applyCustomTheme(); toast('Custom theme saved', 'success');
-}
-function resetCustomTheme() { localStorage.removeItem('private-chat-custom-theme'); const r=document.documentElement; ['--accent-color','--accent-gradient','--msg-me-bg','--card-bg','--bubble-me-radius','--bubble-other-radius'].forEach(k=>r.style.removeProperty(k)); delete r.dataset.customTheme; setTheme(getCurrentTheme()); toast('Custom theme reset', 'success'); }
-function initThemeStudio() { const p=localJson('private-chat-custom-theme',{}); ['accent','bubble','glass','radius'].forEach(k => { const el=document.getElementById('custom-'+k+'-input'); if(el && p[k] != null) el.value=p[k]; }); applyCustomTheme(); }
-function studioEls() { return {root:document.documentElement, overlay:document.getElementById('theme-studio-overlay'), accent:document.getElementById('studio-accent'), secondary:document.getElementById('studio-secondary'), background:document.getElementById('studio-background'), bubble:document.getElementById('studio-bubble'), glass:document.getElementById('studio-glass'), radius:document.getElementById('studio-radius'), glow:document.getElementById('studio-glow'), wallpaper:document.getElementById('studio-wallpaper'), motion:document.getElementById('studio-motion'), stars:document.getElementById('studio-stars'), name:document.getElementById('studio-theme-name')}; }
-function studioPreview() {
-  const e=studioEls(); if(!e.accent) return; const r=e.root, glass=Number(e.glass.value)/100, rad=Number(e.radius.value), glow=Number(e.glow.value)/100;
-  r.style.setProperty('--accent-color',e.accent.value); r.style.setProperty('--accent-gradient',`linear-gradient(110deg,${e.accent.value},${e.secondary.value},#e4dcff)`); r.style.setProperty('--bg-main',e.background.value); r.style.setProperty('--card-bg',`rgba(8,10,28,${glass})`); r.style.setProperty('--msg-me-bg',e.bubble.value); r.style.setProperty('--bubble-me-radius',`${rad}px`); r.style.setProperty('--bubble-other-radius',`${rad}px`); r.style.setProperty('--glow-effect',`0 0 ${Math.round(14+glow*40)}px ${e.accent.value}66`);
-  const preview=document.getElementById('theme-studio-preview'); if(preview) { preview.style.background = e.wallpaper.value==='none' ? e.background.value : e.wallpaper.value==='midnight' ? `radial-gradient(circle at 70% 20%,${e.accent.value}55,transparent 30%),linear-gradient(145deg,${e.background.value},#03040d)` : `radial-gradient(circle at 70% 20%,${e.accent.value}66,transparent 28%),radial-gradient(circle at 20% 70%,${e.secondary.value}33,transparent 35%),linear-gradient(145deg,${e.background.value},#03040d)`; preview.classList.toggle('studio-no-motion',!e.motion.checked); preview.classList.toggle('studio-no-stars',!e.stars.checked); }
-  document.getElementById('studio-glass-output').textContent=glass*100+'%'; document.getElementById('studio-radius-output').textContent=rad+'px'; document.getElementById('studio-glow-output').textContent=Math.round(glow*100)+'%';
-}
-function openThemeStudio() { const e=studioEls(); e.overlay?.classList.add('show'); e.overlay?.setAttribute('aria-hidden','false'); closeSettings(); studioPreview(); }
-function closeThemeStudio() { const e=studioEls(); e.overlay?.classList.remove('show'); e.overlay?.setAttribute('aria-hidden','true'); }
-function saveThemeStudio() { const e=studioEls(); const data={name:e.name.value.trim()||'My theme',accent:e.accent.value,secondary:e.secondary.value,background:e.background.value,bubble:e.bubble.value,glass:e.glass.value,radius:e.radius.value,glow:e.glow.value,wallpaper:e.wallpaper.value,motion:e.motion.checked,stars:e.stars.checked}; saveLocalJson('private-chat-theme-studio',data); saveLocalJson('private-chat-custom-theme',data); applyCustomTheme(); document.body.classList.toggle('motion-disabled',!data.motion); toast(`${escapeHtml(data.name)} saved`, 'success'); closeThemeStudio(); }
-function resetThemeStudio() { localStorage.removeItem('private-chat-theme-studio'); localStorage.removeItem('private-chat-custom-theme'); ['--accent-color','--accent-gradient','--msg-me-bg','--card-bg','--bg-main','--bubble-me-radius','--bubble-other-radius','--glow-effect'].forEach(k=>document.documentElement.style.removeProperty(k)); setTheme(getCurrentTheme()); closeThemeStudio(); toast('Theme studio reset','success'); }
-function initThemeStudioFull() { const e=studioEls(); const p=localJson('private-chat-theme-studio',{}); Object.entries({name:'name',accent:'accent',secondary:'secondary',background:'background',bubble:'bubble',glass:'glass',radius:'radius',glow:'glow',wallpaper:'wallpaper'}).forEach(([id,key])=>{if(e[id]&&p[key]!=null)e[id].value=p[key];}); if(e.motion&&p.motion!=null)e.motion.checked=p.motion; if(e.stars&&p.stars!=null)e.stars.checked=p.stars; ['accent','secondary','background','bubble','glass','radius','glow','wallpaper','motion','stars'].forEach(k=>{e[k]?.addEventListener('input',studioPreview);e[k]?.addEventListener('change',studioPreview);}); document.getElementById('open-theme-studio-btn')?.addEventListener('click',openThemeStudio); document.getElementById('close-theme-studio-btn')?.addEventListener('click',closeThemeStudio); document.getElementById('studio-save-btn')?.addEventListener('click',saveThemeStudio); document.getElementById('studio-reset-btn')?.addEventListener('click',resetThemeStudio); }
 function initMotionSettings() {
   const motion = localStorage.getItem('private-chat-motion') !== 'off'; const cinematic = localStorage.getItem('private-chat-cinematic') === 'on';
   document.getElementById('motion-toggle')?.toggleAttribute('checked', motion); document.getElementById('motion-toggle') && (document.getElementById('motion-toggle').checked = motion);
@@ -2410,8 +2338,7 @@ async function processScheduled() { const rows=getScheduled(), due=rows.filter(x
 function initBadges() { const keys=localJson('private-chat-badges',{}); const badges=[['first','First message',getLoadedMessages().length>0],['theme','Theme explorer',!!localStorage.getItem('private-chat-theme')],['profile','Profile ready',!!localStorage.getItem('private-chat-profile-ready')],['backup','Backup keeper',!!localStorage.getItem('private-chat-last-backup')]]; const el=document.getElementById('badges-list'); if(el) el.innerHTML=badges.map(b=>`<span class="badge-chip" style="opacity:${b[2]?'1':'.45'}">${b[2]?'✓':'○'} ${b[1]}</span>`).join(''); }
 function initDeviceSummary() { const el=document.getElementById('device-session-summary'); if(el) el.textContent=`Current session: ${navigator.platform || 'Browser'} · last active ${new Date().toLocaleTimeString()}`; }
 function initAdvancedTools() {
-  initMotionSettings(); initThemeStudio(); initThemeStudioFull(); renderScheduled(); initBadges(); initDeviceSummary();
-  document.getElementById('custom-theme-save-btn')?.addEventListener('click', saveCustomTheme); document.getElementById('custom-theme-reset-btn')?.addEventListener('click', resetCustomTheme);
+  initMotionSettings(); renderScheduled(); initBadges(); initDeviceSummary();
   document.getElementById('export-backup-btn')?.addEventListener('click', () => { localStorage.setItem('private-chat-last-backup', new Date().toISOString()); exportBackup(); initBadges(); });
   document.getElementById('export-chat-txt-btn')?.addEventListener('click', exportChatTxt); document.getElementById('import-backup-btn')?.addEventListener('click', () => document.getElementById('import-backup-input')?.click()); document.getElementById('import-backup-input')?.addEventListener('change', e => importBackupFile(e.target.files?.[0]));
   document.getElementById('schedule-message-btn')?.addEventListener('click', scheduleMessage);
