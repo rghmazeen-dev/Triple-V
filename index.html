@@ -357,6 +357,8 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #privacy-shield.show { opacity:1; visibility:visible; }
 #privacy-shield i { font-size:4rem; color:var(--accent-color); filter:drop-shadow(var(--glow-effect)); }
 body.capture-guard > *:not(#privacy-shield):not(#screenshot-guard) { filter:blur(18px) !important; }
+body.capture-shield-active #privacy-shield { background:#000 !important; opacity:1; visibility:visible; }
+body.capture-shield-active > *:not(#privacy-shield):not(#screenshot-guard) { visibility:hidden !important; }
 .font-option { width:100%; border:1px solid var(--glass-border); background:rgba(255,255,255,.035); color:var(--text-main); border-radius:12px; padding:10px 12px; margin-top:6px; display:flex; flex-direction:column; gap:4px; cursor:pointer; text-align:right; transition:background .15s, border-color .15s, transform .15s; font:inherit; }
 .font-option:hover { background:rgba(255,255,255,.07); border-color:var(--accent-color); transform:translateY(-1px); }
 .font-option.active { border-color:var(--accent-color); background:rgba(255,255,255,.09); }
@@ -2231,9 +2233,16 @@ function triggerScreenshotGuard() {
   const g = document.getElementById('screenshot-guard');
   if (!g) return;
   g.classList.add('show');
-  setTimeout(() => g.classList.remove('show'), 300);
+  document.body.classList.add('capture-shield-active');
+  const shield = document.getElementById('privacy-shield'); shield?.classList.add('show');
+  clearTimeout(window.__captureShieldTimer);
+  window.__captureShieldTimer = setTimeout(() => { g.classList.remove('show'); document.body.classList.remove('capture-shield-active'); shield?.classList.remove('show'); }, 2200);
 }
 function initScreenshotPrevention() {
+  const isCaptureShortcut = e => e.key === 'PrintScreen' || e.keyCode === 44 || (e.metaKey && e.shiftKey && ['3','4','5'].includes(e.key)) || ((e.metaKey || e.ctrlKey) && e.shiftKey && String(e.key).toLowerCase() === 's');
+  document.addEventListener('keydown', e => {
+    if (isCaptureShortcut(e)) { e.preventDefault(); triggerScreenshotGuard(); }
+  }, true);
   document.addEventListener('keyup', e => {
     if (e.key === 'PrintScreen' || e.keyCode === 44) {
       triggerScreenshotGuard();
@@ -2257,6 +2266,8 @@ function initScreenshotPrevention() {
       e.preventDefault();
     }
   });
+  window.addEventListener('blur', () => { if (currentUser) triggerScreenshotGuard(); }, { passive:true });
+  window.addEventListener('focus', () => { if (document.visibilityState === 'visible') { document.body.classList.remove('capture-shield-active'); document.getElementById('privacy-shield')?.classList.remove('show'); } }, { passive:true });
 }
 
 // ═══════ Settings Drawer ═══════
