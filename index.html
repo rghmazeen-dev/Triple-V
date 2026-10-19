@@ -188,6 +188,7 @@ button,input,textarea { font:inherit; }
 .badge-list { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
 .badge-chip { border:1px solid var(--glass-border); border-radius:999px; padding:5px 8px; background:rgba(255,255,255,.06); color:var(--text-main); font-size:.7rem; }
 .chat-item { min-height:76px; padding:12px 14px; border-radius:18px; margin-bottom:8px; background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); }.chat-item .avatar { width:50px; height:50px; flex-basis:50px; box-shadow:0 0 18px rgba(93,101,255,.22); }.chat-item-main { flex:1; min-width:0; }.chat-item-name-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }.chat-item-name-row h4 { font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.chat-item-time { color:var(--text-muted); font-size:.68rem; white-space:nowrap; }.chat-item-preview { display:block; color:var(--text-muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.78rem; margin-top:5px; }.chat-item-sender { color:var(--accent-color); font-weight:800; margin-inline-end:4px; }.chat-item.unread .chat-item-preview { color:var(--text-main); font-weight:700; }.chat-item.unread { border-color:color-mix(in srgb,var(--accent-color) 45%,transparent); }
+.home-tools-btn { position:relative; }.home-tools-badge { position:absolute; top:-6px; right:-7px; min-width:16px; height:16px; padding:0 4px; border-radius:9px; background:#ef4444; color:#fff; font-size:.58rem; display:none; align-items:center; justify-content:center; font-weight:900; }.notification-list,.global-search-results,.dashboard-body { padding:12px; overflow:auto; max-height:62vh; }.notification-item { display:flex; gap:10px; padding:11px 9px; border-bottom:1px solid var(--glass-border); cursor:pointer; }.notification-item.unread { background:color-mix(in srgb,var(--accent-color) 9%,transparent); }.notification-item i { color:var(--accent-color); margin-top:3px; }.notification-item strong,.notification-item small { display:block; }.notification-item small { color:var(--text-muted); margin-top:3px; }.notification-empty { text-align:center; color:var(--text-muted); padding:28px 10px; }.notification-actions { display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--glass-border); }.global-search-form { display:flex; gap:8px; padding:12px; border-bottom:1px solid var(--glass-border); }.global-search-form input { flex:1; min-width:0; background:var(--input-bg); color:var(--text-main); border:1px solid var(--glass-border); border-radius:10px; padding:10px; }.global-search-result { padding:11px 8px; border-bottom:1px solid var(--glass-border); cursor:pointer; }.global-search-result:hover { background:rgba(255,255,255,.06); }.global-search-result strong,.global-search-result small { display:block; }.global-search-result small { color:var(--text-muted); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.dashboard-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }.dashboard-card { padding:12px; border:1px solid var(--glass-border); border-radius:13px; background:rgba(255,255,255,.045); }.dashboard-card strong { display:block; font-size:1.25rem; color:var(--accent-color); }.dashboard-card span { color:var(--text-muted); font-size:.72rem; }.dashboard-bar { height:8px; border-radius:8px; background:var(--glass-border); overflow:hidden; margin-top:6px; }.dashboard-bar i { display:block; height:100%; border-radius:inherit; background:var(--accent-gradient); }.dashboard-footnote { color:var(--text-muted); font-size:.72rem; text-align:center; margin-top:12px; }
 .chat-header-actions > .chat-header-icon:not(#chat-call-btn):not(.theme-btn) { display:none !important; }.chat-header-actions > .theme-btn { display:flex !important; }
 body.motion-disabled .chat-box, body.motion-disabled #chat-screen *, body.motion-disabled #home-screen * { animation:none !important; transition:none !important; }
 body.cinematic-mode #chat-screen #pinned-bar, body.cinematic-mode #chat-screen .chat-searchbar { opacity:0; pointer-events:none; }
@@ -478,6 +479,8 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
         <i class="fa-solid fa-bell"></i>
         <span id="req-badge" style="display:none;background:#ef4444;color:white;border-radius:50%;padding:1px 5px;font-size:9px;position:absolute;top:-5px;right:-8px;">0</span>
       </button>
+      <button type="button" class="theme-btn home-tools-btn" id="notifications-btn" title="Notifications"><i class="fa-solid fa-inbox"></i><span class="home-tools-badge" id="notifications-badge">0</span></button>
+      <button type="button" class="theme-btn home-tools-btn" id="global-search-btn" title="Search all messages"><i class="fa-solid fa-magnifying-glass"></i></button>
       <button type="button" class="theme-btn theme-toggle-btn" title="Change Theme">
         <i class="fa-solid fa-palette theme-icon"></i>
       </button>
@@ -622,6 +625,7 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
         <button type="button" class="secondary-btn" id="logout-other-sessions-btn">Sign out other sessions</button>
       </div>
     </div>
+    <div class="settings-section"><button type="button" class="settings-section-header" data-toggle-section="stats-dashboard-section-body"><span>Personal statistics</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i></button><div class="settings-section-body" id="stats-dashboard-section-body"><button type="button" class="profile-save-btn" id="open-dashboard-btn"><i class="fa-solid fa-chart-simple"></i> Open statistics dashboard</button></div></div>
     <div class="settings-section">
       <button type="button" id="logout-btn" class="logout-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:13px;padding:12px;cursor:pointer;font:inherit;font-weight:800;"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
     </div>
@@ -794,6 +798,9 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
     <div style="padding:14px;" id="stats-body"></div>
   </div>
 </div>
+<div id="notifications-modal" class="modal"><div class="modal-content"><div class="modal-head"><h3 style="font-size:1.1rem;">Notifications</h3><i class="fa-solid fa-xmark modal-close" id="close-notifications-btn"></i></div><div id="notification-list" class="notification-list"></div><div class="notification-actions"><button type="button" class="secondary-btn" id="mark-notifications-read-btn">Mark all as read</button><button type="button" class="secondary-btn" id="clear-notifications-btn">Clear</button></div></div></div>
+<div id="global-search-modal" class="modal"><div class="modal-content"><div class="modal-head"><h3 style="font-size:1.1rem;">Search all messages</h3><i class="fa-solid fa-xmark modal-close" id="close-global-search-btn"></i></div><div class="global-search-form"><input id="global-search-input" type="search" placeholder="Search in all your conversations..." autocomplete="off"><button type="button" class="primary-btn" id="run-global-search-btn" style="margin:0;max-width:none;padding:9px 13px;"><i class="fa-solid fa-search"></i></button></div><div id="global-search-results" class="global-search-results"><div class="notification-empty">Type a word to search your messages.</div></div></div></div>
+<div id="dashboard-modal" class="modal"><div class="modal-content"><div class="modal-head"><h3 style="font-size:1.1rem;">Personal statistics</h3><i class="fa-solid fa-xmark modal-close" id="close-dashboard-btn"></i></div><div id="dashboard-body" class="dashboard-body"><div class="notification-empty">Loading statistics...</div></div></div></div>
 
 <!-- ═══════ Theme Picker ═══════ -->
 <div id="theme-picker">
@@ -2659,6 +2666,7 @@ function handleIncomingMessage(m) {
   } else {
     unreadCounts[friend] = (unreadCounts[friend] || 0) + 1;
     updateFriendBadge(friend);
+    pushNotification(`New message from ${friend}`, getMessagePayload(m).text || 'New message', 'fa-comment');
     playNotifySound();
   }
 }
@@ -3950,11 +3958,32 @@ document.getElementById('input-username')?.addEventListener('keydown', e => {
   if (e.key === 'Enter' && authStep === 'register') { e.preventDefault(); handleAuthAction(); }
 });
 
+// ═══════ Notifications center ═══════
+let appNotifications = localJson('private-chat-notifications', []);
+function saveNotifications() { saveLocalJson('private-chat-notifications', appNotifications.slice(0, 80)); }
+function updateNotificationBadge() { const b=document.getElementById('notifications-badge'); const n=appNotifications.filter(x=>!x.read).length; if(b){b.textContent=n>99?'99+':n;b.style.display=n?'flex':'none';} }
+function pushNotification(title, body, icon='fa-bell') { if(!title) return; appNotifications.unshift({id:Date.now()+Math.random(),title,body,icon,at:new Date().toISOString(),read:false}); saveNotifications(); updateNotificationBadge(); }
+function renderNotifications() { const box=document.getElementById('notification-list'); if(!box)return; if(!appNotifications.length){box.innerHTML='<div class="notification-empty">No notifications yet.</div>';return;} box.innerHTML=appNotifications.map(n=>`<div class="notification-item ${n.read?'':'unread'}" data-notification-id="${n.id}"><i class="fa-solid ${escapeHtml(n.icon||'fa-bell')}"></i><div><strong>${escapeHtml(n.title)}</strong><small>${escapeHtml(n.body||'')} · ${new Date(n.at).toLocaleString()}</small></div></div>`).join(''); }
+function openNotifications() { const m=document.getElementById('notifications-modal'); if(m){m.style.display='flex';renderNotifications();} }
+function closeNotifications() { const m=document.getElementById('notifications-modal'); if(m)m.style.display='none'; }
+function markNotificationsRead() { appNotifications.forEach(n=>n.read=true); saveNotifications(); renderNotifications(); updateNotificationBadge(); }
+function clearNotifications() { appNotifications=[]; saveNotifications(); renderNotifications(); updateNotificationBadge(); }
+
+// ═══════ Global message search ═══════
+function openGlobalSearch() { const m=document.getElementById('global-search-modal'); if(m){m.style.display='flex';document.getElementById('global-search-input')?.focus();} }
+function closeGlobalSearch() { const m=document.getElementById('global-search-modal'); if(m)m.style.display='none'; }
+async function runGlobalSearch() { const q=(document.getElementById('global-search-input')?.value||'').trim(); const box=document.getElementById('global-search-results'); if(!box)return; if(q.length<2){box.innerHTML='<div class="notification-empty">Type at least 2 characters.</div>';return;} const c=getSupabase(); if(!c||!currentUser){box.innerHTML='<div class="notification-empty">Sign in to search messages.</div>';return;} box.innerHTML='<div class="notification-empty">Searching...</div>'; try { const {data,error}=await c.from('private_messages').select('id,sender,receiver,content,created_at').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`).ilike('content',`%${q}%`).order('created_at',{ascending:false}).limit(100); if(error)throw error; if(!data?.length){box.innerHTML='<div class="notification-empty">No matching messages.</div>';return;} box.innerHTML=data.map(m=>{const friend=m.sender===currentUser?m.receiver:m.sender;const text=getMessagePayload(m).text||String(m.content||'');return `<div class="global-search-result" data-search-friend="${escapeHtml(friend)}"><strong>${escapeHtml(friend)} · ${new Date(m.created_at).toLocaleString()}</strong><small>${escapeHtml(text.slice(0,180))}</small></div>`;}).join(''); } catch(e) { console.error(e); box.innerHTML='<div class="notification-empty">Search failed. Try again.</div>'; } }
+
+// ═══════ Personal statistics dashboard ═══════
+async function openDashboard() { const m=document.getElementById('dashboard-modal'),box=document.getElementById('dashboard-body'); if(!m||!box)return; m.style.display='flex'; box.innerHTML='<div class="notification-empty">Loading statistics...</div>'; const c=getSupabase(); if(!c||!currentUser){box.innerHTML='<div class="notification-empty">Sign in to view statistics.</div>';return;} try { const {data,error}=await c.from('private_messages').select('sender,receiver,created_at,content').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`).order('created_at',{ascending:true}).limit(1000); if(error)throw error; const rows=data||[], sent=rows.filter(x=>x.sender===currentUser).length, received=rows.length-sent, days=new Set(rows.map(x=>String(x.created_at||'').slice(0,10))).size, chats=new Set(rows.map(x=>x.sender===currentUser?x.receiver:x.sender)).size, words=rows.reduce((n,x)=>n+(getMessagePayload(x).text||String(x.content||'')).trim().split(/\s+/).filter(Boolean).length,0), ratio=rows.length?Math.round(sent/rows.length*100):0; box.innerHTML=`<div class="dashboard-grid"><div class="dashboard-card"><strong>${rows.length.toLocaleString()}</strong><span>Total messages</span></div><div class="dashboard-card"><strong>${chats.toLocaleString()}</strong><span>Active chats</span></div><div class="dashboard-card"><strong>${sent.toLocaleString()}</strong><span>Sent by you</span></div><div class="dashboard-card"><strong>${received.toLocaleString()}</strong><span>Received</span></div><div class="dashboard-card"><strong>${days.toLocaleString()}</strong><span>Active days</span></div><div class="dashboard-card"><strong>${words.toLocaleString()}</strong><span>Words exchanged</span></div></div><div class="dashboard-card" style="margin-top:10px;"><span>Your share of messages</span><div class="dashboard-bar"><i style="width:${ratio}%"></i></div><div style="display:flex;justify-content:space-between;font-size:.7rem;margin-top:5px;"><span>${ratio}% sent</span><span>${100-ratio}% received</span></div></div><div class="dashboard-footnote">Based on the latest 1,000 messages available to your account.</div>`; } catch(e){console.error(e);box.innerHTML='<div class="notification-empty">Could not load statistics.</div>'; } }
+function closeDashboard() { const m=document.getElementById('dashboard-modal'); if(m)m.style.display='none'; }
+
 // ═══════ Search & other input events ═══════
 document.getElementById('search-username')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') startNewChat();
 });
 document.getElementById('chat-search-input')?.addEventListener('input', runChatSearch);
+document.getElementById('global-search-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runGlobalSearch(); } });
 
 // ═══════ PIN input Enter keys ═══════
 document.addEventListener('keydown', e => {
@@ -4047,6 +4076,17 @@ document.addEventListener('click', e => {
     return;
   }
   if (t.closest('#requests-btn')) { openRequestsModal(); return; }
+  if (t.closest('#notifications-btn')) { openNotifications(); return; }
+  if (t.closest('#global-search-btn')) { openGlobalSearch(); return; }
+  if (t.closest('#open-dashboard-btn')) { openDashboard(); return; }
+  if (t.closest('#close-notifications-btn')) { closeNotifications(); return; }
+  if (t.closest('#close-global-search-btn')) { closeGlobalSearch(); return; }
+  if (t.closest('#close-dashboard-btn')) { closeDashboard(); return; }
+  if (t.closest('#mark-notifications-read-btn')) { markNotificationsRead(); return; }
+  if (t.closest('#clear-notifications-btn')) { clearNotifications(); return; }
+  if (t.closest('#run-global-search-btn')) { runGlobalSearch(); return; }
+  if (t.closest('.notification-item')) { const id=t.closest('.notification-item').dataset.notificationId; const n=appNotifications.find(x=>String(x.id)===String(id)); if(n){n.read=true;saveNotifications();renderNotifications();updateNotificationBadge();} return; }
+  if (t.closest('.global-search-result')) { const friend=t.closest('.global-search-result').dataset.searchFriend; closeGlobalSearch(); openChat(friend); return; }
   if (t.closest('#close-requests-btn')) { closeRequestsModal(); return; }
 
   if (t.closest('#open-settings-btn')) { openSettings(); return; }
@@ -4299,6 +4339,7 @@ document.addEventListener('keydown', e => {
     closePinPrompt(false);
     closePinSetup();
     closeStats();
+    closeNotifications(); closeGlobalSearch(); closeDashboard();
     if (editingMessageId) { editingMessageId = null; msgInput.value = ''; toggleSendBtn(); }
   }
 });
@@ -4422,6 +4463,7 @@ startSecurityQuestionSettingWatch();
   initLanguage();
   initSoundSettings();
   initAdvancedTools();
+  updateNotificationBadge();
   updateAuthUI();
   updateComposerHeight();
   updateFsButtonVisibility();
