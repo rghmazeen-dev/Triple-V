@@ -436,58 +436,9 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
 #fs-toggle-btn.is-fullscreen { color: var(--accent-color); border-color: var(--accent-color); }
 #fs-toggle-btn.shift-for-back { left: max(62px, calc(env(safe-area-inset-left) + 52px)); }
 
-/* ═══════ Gesture Gate (camera hand-gesture passcode) ═══════ */
-body.gesture-locked > *:not(#gesture-gate) { visibility:hidden !important; }
-#gesture-gate {
-  position:fixed; inset:0; z-index:2147483000;
-  background:radial-gradient(circle at top right,#1a080c,#0b090a 60%);
-  color:#f8fafc; font-family:'Cairo',-apple-system,sans-serif;
-  display:flex; align-items:center; justify-content:center; text-align:center;
-  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
-  overflow:hidden; transition:opacity .35s ease;
-}
-#gesture-gate.gg-out { opacity:0; pointer-events:none; }
-#gesture-gate .gg-card { width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center; gap:12px; }
-#gesture-gate #gg-icon { font-size:30px; color:var(--accent-color,#e63946); filter:drop-shadow(0 0 10px rgba(230,57,70,.5)); }
-#gesture-gate h2 { margin:0; font-size:22px; font-weight:800; }
-#gesture-gate p { margin:0; font-size:14px; color:#b1a7a6; line-height:1.5; }
-#gesture-gate .gg-cam {
-  width:min(70vw,280px); aspect-ratio:1/1; border-radius:50%; overflow:hidden; margin:6px 0;
-  border:3px solid var(--accent-color,#e63946); box-shadow:0 0 28px rgba(230,57,70,.35); background:#000;
-}
-#gesture-gate video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:block; }
-#gesture-gate .gg-hold { width:min(70vw,280px); height:6px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; }
-#gesture-gate #gg-hold-bar { width:0%; height:100%; background:var(--accent-color,#e63946); transition:width .1s linear; }
-#gesture-gate .gg-dots { display:flex; gap:10px; margin-top:4px; }
-#gesture-gate .gg-dot { width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,.14); transition:background .2s, transform .2s; }
-#gesture-gate .gg-dot.on { background:#22c55e; transform:scale(1.15); }
-#gesture-gate .gg-msg { min-height:22px; font-size:15px; font-weight:600; }
-#gesture-gate .gg-msg.ok  { color:#22c55e; }
-#gesture-gate .gg-msg.bad { color:#ef4444; }
-#gesture-gate .gg-retry {
-  border:0; border-radius:12px; padding:10px 22px; font:inherit; font-weight:700; cursor:pointer;
-  color:#fff; background:var(--accent-gradient,linear-gradient(135deg,#d90429,#ef233c));
-}
-#gesture-gate.gg-shake .gg-card { animation:gg-shake .4s; }
-@keyframes gg-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 </style>
 </head>
-<body class="gesture-locked">
-
-<!-- ═══════ Gesture Gate (camera hand-gesture passcode) ═══════ -->
-<div id="gesture-gate" role="dialog" aria-modal="true" aria-live="polite">
-  <div class="gg-card">
-    <i class="fa-solid fa-hand" id="gg-icon"></i>
-    <h2 id="gg-title">Gesture Lock</h2>
-    <p id="gg-sub">Show your secret hand gestures to enter</p>
-    <div class="gg-cam"><video id="gg-video" autoplay playsinline muted></video></div>
-    <div class="gg-hold"><div id="gg-hold-bar"></div></div>
-    <div class="gg-dots" id="gg-dots"></div>
-    <div class="gg-msg" id="gg-msg"></div>
-    <button type="button" class="gg-retry" id="gg-retry" style="display:none;"></button>
-  </div>
-</div>
-
+<body>
 
 
 <!-- Fullscreen toggle (hidden inside chat) -->
@@ -938,8 +889,6 @@ function getSupabase() {
 // This switch is read from Supabase. If the setting is missing or unavailable,
 // the extra layer stays OFF so a configuration issue cannot lock users out.
 let securityQuestionsEnabled = false;
-let gesturesEnabled = true;
-let gesturesSettingInitialized = false;
 let securityQuestionsPollTimer = null;
 let securityQuestionOverlay = null;
 async function refreshSecurityQuestionSetting() {
@@ -947,13 +896,9 @@ async function refreshSecurityQuestionSetting() {
   if (!c) { setSecurityQuestionLayer(false); return false; }
   try {
     const { data, error } = await c.from('app_security_settings')
-      .select('questions_enabled,gestures_enabled').eq('id', true).maybeSingle();
+      .select('questions_enabled').eq('id', true).maybeSingle();
     if (error || !data) { setSecurityQuestionLayer(false); return false; }
     setSecurityQuestionLayer(!!data.questions_enabled);
-    const nextGesturesEnabled = typeof data.gestures_enabled === 'boolean' ? data.gestures_enabled : true;
-    const changed = !gesturesSettingInitialized || nextGesturesEnabled !== gesturesEnabled;
-    gesturesEnabled = nextGesturesEnabled; gesturesSettingInitialized = true;
-    if (changed) window.dispatchEvent(new CustomEvent('private-chat-gestures-toggle', { detail: { enabled: gesturesEnabled } }));
     return securityQuestionsEnabled;
   } catch (_) { setSecurityQuestionLayer(false); return false; }
 }
@@ -4558,231 +4503,5 @@ else initApp();
   else bind();
 })();
 </script>
-<script>
-// ═══════ Gesture Gate (camera hand-gesture passcode) ═══════
-(async function () {
-  'use strict';
-
-  /* ---------- CONFIG (عدّل هنا) ---------- */
-  var GATE_ENABLED = true;                                  // false = يقفل البوابة خالص
-  var SECRET   = ['Victory', 'Closed_Fist', 'Open_Palm'];   // تسلسل الحركات السرّي
-  // الحركات المتاحة: Closed_Fist ✊ | Open_Palm ✋ | Pointing_Up ☝️ | Thumb_Down 👎 | Thumb_Up 👍 | Victory ✌️ | ILoveYou 🤟
-  try {
-    var gateClient = typeof getSupabase === 'function' ? getSupabase() : null;
-    if (gateClient) {
-      var gateSetting = await gateClient.from('app_security_settings').select('gestures_enabled').eq('id', true).maybeSingle();
-      if (!gateSetting.error && gateSetting.data && typeof gateSetting.data.gestures_enabled === 'boolean') GATE_ENABLED = gateSetting.data.gestures_enabled;
-    }
-  } catch (_) {}
-  var HOLD_MS  = 1000;    // لازم تثبّت كل حركة المدة دي
-  var MIN_SCORE = 0.7;    // أقل ثقة للموديل عشان الحركة تتحسب
-  var DETECT_EVERY_MS = 100;
-  var GRACE_MS = 300;     // سماح لو الموديل فقد اليد لحظة
-
-  var VISION_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-  var MODEL_URL  = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task';
-
-  var TXT = {
-    en: {
-      title: 'Gesture Lock', sub: 'Show your secret hand gestures to enter',
-      loading: 'Loading camera…', ready: 'Show your first gesture', next: 'Correct ✓ next one…',
-      wrong: 'Wrong — start over', ok: 'Welcome ✓',
-      camDenied: 'Camera access is required. Allow it, then try again.',
-      noCam: 'Camera is not available in this browser (HTTPS is required).',
-      loadFail: 'Could not load the gesture model. Check your connection.',
-      retry: 'Try again'
-    },
-    ar: {
-      title: 'قفل الحركات', sub: 'اعمل الحركات السرّية بإيدك عشان تدخل',
-      loading: 'جاري تحميل الكاميرا…', ready: 'اعمل الحركة الأولى', next: 'صح ✓ الحركة اللي بعدها…',
-      wrong: 'غلط — ابدأ من الأول', ok: 'أهلاً بيك ✓',
-      camDenied: 'لازم تسمح بالكاميرا، اسمح بيها وجرّب تاني.',
-      noCam: 'الكاميرا مش متاحة في المتصفح ده (محتاج HTTPS).',
-      loadFail: 'مقدرتش أحمّل موديل الحركات، اتأكد من النت.',
-      retry: 'جرّب تاني'
-    }
-  };
-
-  /* ---------- setup ---------- */
-  var body = document.body;
-  var gate = document.getElementById('gesture-gate');
-  if (!gate) { body.classList.remove('gesture-locked'); return; }
-  if (!GATE_ENABLED) {
-    body.classList.remove('gesture-locked');
-    gate.style.display = 'none';
-  }
-
-  var lang = 'en';
-  try { lang = localStorage.getItem('private-chat-lang') === 'ar' ? 'ar' : 'en'; } catch (e) {}
-  var T = TXT[lang];
-  gate.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-
-  var video    = document.getElementById('gg-video');
-  var holdBar  = document.getElementById('gg-hold-bar');
-  var dotsBox  = document.getElementById('gg-dots');
-  var msgBox   = document.getElementById('gg-msg');
-  var retryBtn = document.getElementById('gg-retry');
-  document.getElementById('gg-title').textContent = T.title;
-  document.getElementById('gg-sub').textContent = T.sub;
-  retryBtn.textContent = T.retry;
-
-  var dots = [];
-  for (var i = 0; i < SECRET.length; i++) {
-    var d = document.createElement('span');
-    d.className = 'gg-dot';
-    dotsBox.appendChild(d);
-    dots.push(d);
-  }
-
-  var stream = null, recognizer = null, running = false, rafId = 0;
-  var step = 0, current = null, since = 0, lastSeen = 0, lastDetect = 0, fired = false;
-
-  function noop() {}
-  function setMsg(text, kind) { msgBox.textContent = text; msgBox.className = 'gg-msg' + (kind ? ' ' + kind : ''); }
-  function renderDots() { for (var k = 0; k < dots.length; k++) dots[k].className = 'gg-dot' + (k < step ? ' on' : ''); }
-  function shake() {
-    gate.classList.remove('gg-shake'); void gate.offsetWidth; gate.classList.add('gg-shake');
-  }
-  function stopCamera() {
-    if (stream) { try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
-    stream = null;
-    try { video.srcObject = null; } catch (e) {}
-  }
-  function resetState() {
-    step = 0; current = null; since = 0; lastSeen = 0; lastDetect = 0; fired = false;
-    holdBar.style.width = '0%'; renderDots();
-  }
-  function fail(text) {
-    running = false;
-    setMsg(text, 'bad');
-    retryBtn.style.display = '';
-  }
-
-  /* ---------- model ---------- */
-  async function loadRecognizer() {
-    var mod = await import(VISION_URL + '/vision_bundle.mjs');
-    var fileset = await mod.FilesetResolver.forVisionTasks(VISION_URL + '/wasm');
-    return mod.GestureRecognizer.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: MODEL_URL },
-      runningMode: 'VIDEO',
-      numHands: 1
-    });
-  }
-
-  /* ---------- unlock ---------- */
-  function unlock() {
-    running = false;
-    cancelAnimationFrame(rafId);
-    setMsg(T.ok, 'ok');
-    stopCamera();
-    try { recognizer && recognizer.close(); } catch (e) {}
-    recognizer = null;
-    setTimeout(function () {
-      body.classList.remove('gesture-locked');
-      gate.classList.add('gg-out');
-      try { window.dispatchEvent(new Event('resize')); } catch (e) {}
-      setTimeout(function () { if (gate.parentNode) gate.parentNode.removeChild(gate); }, 400);
-    }, 350);
-  }
-
-  function onGesture(name) {
-    if (name === SECRET[step]) {
-      step++;
-      renderDots();
-      if (step >= SECRET.length) unlock();
-      else setMsg(T.next, 'ok');
-    } else {
-      step = 0;
-      renderDots();
-      setMsg(T.wrong, 'bad');
-      shake();
-    }
-  }
-
-  /* ---------- detection loop ---------- */
-  function tick() {
-    if (!running) return;
-    rafId = requestAnimationFrame(tick);
-    var now = performance.now();
-    if (now - lastDetect < DETECT_EVERY_MS) return;
-    if (video.readyState < 2 || !video.videoWidth) return;
-    lastDetect = now;
-
-    var name = null;
-    try {
-      var res = recognizer.recognizeForVideo(video, now);
-      var g = res && res.gestures && res.gestures[0] && res.gestures[0][0];
-      if (g && g.score >= MIN_SCORE && g.categoryName !== 'None') name = g.categoryName;
-    } catch (e) { return; }
-
-    if (name) lastSeen = now;
-    else if (current && now - lastSeen < GRACE_MS) name = current;
-
-    if (name !== current) { current = name; since = now; fired = false; }
-    if (!name) { holdBar.style.width = '0%'; return; }
-    if (fired) return;
-
-    var held = now - since;
-    holdBar.style.width = Math.min(100, (held / HOLD_MS) * 100) + '%';
-    if (held >= HOLD_MS) { fired = true; onGesture(name); }
-  }
-
-  /* ---------- start ---------- */
-  async function start() {
-    retryBtn.style.display = 'none';
-    resetState();
-    setMsg(T.loading, '');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fail(T.noCam); return; }
-
-    var camP = navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 480 } },
-      audio: false
-    });
-    var recP = recognizer ? Promise.resolve(recognizer) : loadRecognizer();
-    camP.catch(noop); recP.catch(noop);
-
-    try {
-      stream = await camP;
-      video.srcObject = stream;
-      var p = video.play(); if (p && p.catch) p.catch(noop);
-    } catch (e) { fail(T.camDenied); return; }
-
-    try { recognizer = await recP; }
-    catch (e) { stopCamera(); fail(T.loadFail); return; }
-
-    running = true;
-    setMsg(T.ready, '');
-    tick();
-  }
-
-  retryBtn.addEventListener('click', start);
-  window.addEventListener('private-chat-gestures-toggle', function (event) {
-    var enabled = !!(event && event.detail && event.detail.enabled);
-    GATE_ENABLED = enabled;
-    if (!enabled) {
-      running = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      stopCamera();
-      gate.style.display = 'none';
-      body.classList.remove('gesture-locked');
-    } else {
-      gate.style.display = '';
-      body.classList.add('gesture-locked');
-      start();
-    }
-  });
-
-  // لو أندرويد قفل الكاميرا وإحنا في الخلفية، نعيد تشغيلها
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden || !gate.parentNode || !running || !stream) return;
-    var dead = stream.getTracks().some(function (t) { return t.readyState === 'ended'; });
-    if (dead) { running = false; cancelAnimationFrame(rafId); stopCamera(); start(); }
-  });
-
-  if (GATE_ENABLED) start();
-  else { stopCamera(); gate.style.display = 'none'; body.classList.remove('gesture-locked'); }
-})();
-</script>
-
 </body>
 </html>
