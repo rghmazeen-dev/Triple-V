@@ -371,8 +371,6 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #autolock-overlay { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity 2s ease; z-index:99990; }
 #autolock-overlay.show { opacity:.92; }
 #autolock-overlay.locked { opacity:1; pointer-events:auto; }
-#screenshot-guard { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .08s; z-index:99999; display:flex; align-items:center; justify-content:center; color:#fff; }
-#screenshot-guard.show { opacity:1; }
 .chat-header-icon.pin-locked i { color:var(--accent-color); filter:drop-shadow(0 0 6px var(--accent-color)); }
 .pin-modal-content { max-width:360px; text-align:center; }
 .pin-modal-content h3 { margin-bottom:8px; font-size:1.15rem; }
@@ -452,13 +450,6 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 /* Keep the chat header focused: call is the only in-header action. Fullscreen stays floating. */
 .chat-header-actions > *:not(#chat-call-btn) { display:none !important; }
 .requests-list { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
-#privacy-shield { position:fixed; inset:0; background:var(--bg-main); z-index:9999; display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:opacity .25s ease, visibility .25s ease; pointer-events:none; }
-#privacy-shield.show { opacity:1; visibility:visible; }
-#privacy-shield i { font-size:4rem; color:var(--accent-color); filter:drop-shadow(var(--glow-effect)); }
-body.capture-guard > *:not(#privacy-shield):not(#screenshot-guard) { filter:blur(18px) !important; }
-body.capture-shield-active #privacy-shield { background:#000 !important; opacity:1; visibility:visible; }
-body.capture-shield-active > *:not(#privacy-shield):not(#screenshot-guard) { visibility:hidden !important; }
-body.capture-shield-active { user-select:none !important; -webkit-user-select:none !important; }
 .font-option { width:100%; border:1px solid var(--glass-border); background:rgba(255,255,255,.035); color:var(--text-main); border-radius:12px; padding:10px 12px; margin-top:6px; display:flex; flex-direction:column; gap:4px; cursor:pointer; text-align:right; transition:background .15s, border-color .15s, transform .15s; font:inherit; }
 .font-option:hover { background:rgba(255,255,255,.07); border-color:var(--accent-color); transform:translateY(-1px); }
 .font-option.active { border-color:var(--accent-color); background:rgba(255,255,255,.09); }
@@ -1032,8 +1023,6 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
   <canvas id="wb-canvas"></canvas>
 </div>
 
-<!-- ═══════ Privacy Shield ═══════ -->
-<div id="privacy-shield"><i class="fa-solid fa-lock"></i></div>
 
 <!-- ═══════ Toast Container ═══════ -->
 <div id="toast-container"></div>
@@ -1044,8 +1033,6 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 <!-- ═══════ Auto-Lock Overlay ═══════ -->
 <div id="autolock-overlay"></div>
 
-<!-- ═══════ Screenshot Guard ═══════ -->
-<div id="screenshot-guard"><i class="fa-solid fa-eye-slash" style="font-size:2.5rem;opacity:.6;"></i></div>
 
 <script>
 'use strict';
@@ -1701,7 +1688,7 @@ function formatLastSeen(ts) {
 <script>
 'use strict';
 // ============================================================
-// JS Part 2: Auth + AutoLock + PIN + Screenshot + Settings
+// JS Part 2: Auth + AutoLock + PIN + Settings
 // ============================================================
 
 // ═══════ Auth UI ═══════
@@ -2078,48 +2065,6 @@ function updatePinButtonIcon(friend) {
     btn.classList.toggle('pin-locked', locked);
     btn.title = locked ? 'Chat locked (tap to change)' : 'Lock this chat';
   }
-}
-
-// ═══════ Screenshot Prevention ═══════
-function triggerScreenshotGuard() {
-  const g = document.getElementById('screenshot-guard');
-  if (!g) return;
-  g.classList.add('show');
-  document.body.classList.add('capture-shield-active');
-  const shield = document.getElementById('privacy-shield'); shield?.classList.add('show');
-  clearTimeout(window.__captureShieldTimer);
-  window.__captureShieldTimer = setTimeout(() => { g.classList.remove('show'); document.body.classList.remove('capture-shield-active'); shield?.classList.remove('show'); }, 5000);
-}
-function initScreenshotPrevention() {
-  const isCaptureShortcut = e => e.key === 'PrintScreen' || e.keyCode === 44 || (e.metaKey && e.shiftKey && ['3','4','5'].includes(e.key)) || ((e.metaKey || e.ctrlKey) && e.shiftKey && String(e.key).toLowerCase() === 's');
-  document.addEventListener('keydown', e => {
-    if (isCaptureShortcut(e)) { e.preventDefault(); triggerScreenshotGuard(); }
-  }, true);
-  document.addEventListener('keyup', e => {
-    if (e.key === 'PrintScreen' || e.keyCode === 44) {
-      triggerScreenshotGuard();
-      try { navigator.clipboard.writeText(''); } catch(err){}
-    }
-  });
-  document.addEventListener('keyup', e => {
-    if (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
-      triggerScreenshotGuard();
-      try { navigator.clipboard.writeText(''); } catch(err){}
-    }
-  });
-  document.addEventListener('keyup', e => {
-    if (e.key === 'S' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-      triggerScreenshotGuard();
-      try { navigator.clipboard.writeText(''); } catch(err){}
-    }
-  });
-  document.addEventListener('contextmenu', e => {
-    if (e.target && (e.target.tagName === 'IMG' || e.target.closest('.media-content'))) {
-      e.preventDefault();
-    }
-  });
-  window.addEventListener('blur', () => { if (currentUser) triggerScreenshotGuard(); }, { passive:true });
-  window.addEventListener('focus', () => { if (document.visibilityState === 'visible') { document.body.classList.remove('capture-shield-active'); document.getElementById('privacy-shield')?.classList.remove('show'); } }, { passive:true });
 }
 
 // ═══════ Settings Drawer ═══════
@@ -4543,20 +4488,17 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// ═══════ Visibility Change ═══════
+// ═══════ Session privacy on leave ═══════
+// Returning from another tab/app or a locked screen always starts at Pass code.
 window.addEventListener('visibilitychange', () => {
-  const s = document.getElementById('privacy-shield');
-  if (!s) return;
-  if (document.visibilityState === 'hidden') { s.classList.add('show'); document.body.classList.add('capture-guard'); }
-  else setTimeout(() => { s.classList.remove('show'); document.body.classList.remove('capture-guard'); }, 250);
-});
+  if (document.visibilityState === 'hidden' && currentUser) {
+    try { lockAppNow(); } catch (e) { console.error('Session lock failed:', e); }
+  }
+}, { passive:true });
 
 // Leaving the browser/app must never restore an authenticated chat from bfcache.
 window.addEventListener('pagehide', () => { if (currentUser) { try { lockAppNow(); } catch(e) {} } }, { passive:true });
 window.addEventListener('beforeunload', () => { if (currentUser) { try { lockAppNow(); } catch(e) {} } });
-
-// ═══════ Screenshot Guard Init ═══════
-initScreenshotPrevention();
 
 // ═══════ Render Font Options ═══════
 renderFontOptions();
