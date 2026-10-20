@@ -309,6 +309,7 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 .theme-dot.light { background:linear-gradient(135deg,#ffffff,#d9fdd3 55%,#00a884); }
 	.theme-dot.telegram { background:linear-gradient(135deg,#5eaad7,#3a8cbf); }
 	.theme-dot.future-midnight { background:linear-gradient(135deg,#8ff7dc,#72b6ff 50%,#aa78ff); }
+.theme-dot.ig2 { background:linear-gradient(135deg,#2ce7ed,#4964ff 52%,#a52cff); }
 .theme-option-name { flex:1; font-size:.8rem; font-weight:700; }
 .theme-option-check { opacity:0; font-size:.8rem; }
 .theme-option.active .theme-option-check { opacity:1; }
@@ -448,6 +449,8 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #chat-screen.custom-bg-active .chat-box { background-image:var(--custom-chat-bg,none); background-size:cover; background-position:center; background-attachment:fixed; }
 #chat-screen.custom-bg-active .chat-box::after { content:''; position:absolute; inset:0; background:rgba(0,0,0,.35); pointer-events:none; z-index:0; }
 .chat-box > * { position:relative; z-index:1; }
+/* Keep the chat header focused: call is the only in-header action. Fullscreen stays floating. */
+.chat-header-actions > *:not(#chat-call-btn) { display:none !important; }
 .requests-list { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
 #privacy-shield { position:fixed; inset:0; background:var(--bg-main); z-index:9999; display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:opacity .25s ease, visibility .25s ease; pointer-events:none; }
 #privacy-shield.show { opacity:1; visibility:visible; }
@@ -558,6 +561,50 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
 :root[data-theme="future-midnight"] .msg-group.other .bubble { background:rgba(11,29,48,.84); border:1px solid rgba(165,226,255,.11); backdrop-filter:blur(12px); }
 :root[data-theme="future-midnight"] .input-wrapper { border:1px solid rgba(143,247,220,.17); box-shadow:0 0 18px rgba(76,141,255,.1); }
 :root[data-theme="future-midnight"] .send-btn { background:var(--accent-gradient); color:#06101b; }
+/* ===== IG2 — aurora glass chat ===== */
+:root[data-theme="ig2"] {
+  --ig2-blue:#405cff; --ig2-purple:#8b2cff; --ig2-dark:#101044; --ig2-deep:#080c35;
+  --ig2-cyan:#2ce7ed; --ig2-text:#f7f8ff;
+  --accent-color:#7b63ff; --accent-gradient:linear-gradient(135deg,#37dce7,#4968ff 52%,#a132ff);
+  --bg-main:#080c35; --chat-bg:#080c35; --composer-bg:rgba(7,10,44,.82); --input-bg:rgba(31,28,91,.88);
+  --card-bg:rgba(15,18,65,.88); --glass-border:rgba(154,178,255,.22); --text-main:#f7f8ff; --text-muted:#c3c7e8;
+  --msg-me-bg:linear-gradient(145deg,#3cdbed 0%,#4964ff 50%,#a52cff 100%);
+  --msg-other-bg:linear-gradient(145deg,rgba(18,18,77,.96),rgba(27,18,92,.94));
+  --msg-me-shadow:0 8px 24px rgba(61,76,255,.3); --bubble-me-radius:24px 24px 6px 24px; --bubble-other-radius:24px 24px 24px 6px;
+}
+:root[data-theme="ig2"] body { background:#080c35; }
+:root[data-theme="ig2"] #chat-screen,
+:root[data-theme="ig2"] #home-screen,
+:root[data-theme="ig2"] #auth-screen { background-color:#080c35; background-image:url('assets/ig2-background.jpg'); background-size:cover; background-position:center top; background-attachment:fixed; }
+:root[data-theme="ig2"] .chat-header { min-height:88px; padding:14px 18px; background:rgba(5,5,37,.74); border-bottom:1px solid rgba(196,203,255,.22); box-shadow:0 8px 28px rgba(4,5,35,.35); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+:root[data-theme="ig2"] .chat-header-main { min-height:58px; gap:12px; }
+:root[data-theme="ig2"] .chat-header-actions { align-self:center; }
+:root[data-theme="ig2"] .chat-header-actions #chat-call-btn { display:flex !important; width:44px; height:44px; border-radius:50%; color:#fff; background:rgba(103,115,255,.2); border:1px solid rgba(190,203,255,.25); }
+:root[data-theme="ig2"] .chat-header-actions #chat-call-btn:hover { background:rgba(122,138,255,.38); }
+:root[data-theme="ig2"] #fs-toggle-btn { top:22px; right:74px; background:rgba(20,20,79,.84); color:#fff; border-color:rgba(190,203,255,.25); }
+:root[data-theme="ig2"] .chat-back { color:#f5f6ff; font-size:1.25rem; }
+:root[data-theme="ig2"] .chat-avatar { width:52px; height:52px; flex-basis:52px; border:2px solid rgba(221,225,255,.8); box-shadow:0 0 18px rgba(85,104,255,.45); }
+:root[data-theme="ig2"] .chat-user-name { font-size:1.05rem; color:#fff; }
+:root[data-theme="ig2"] .chat-user-status { color:#cdd3ff; }
+:root[data-theme="ig2"] .chat-box { background:rgba(5,8,42,.34); background-image:linear-gradient(rgba(5,8,42,.12),rgba(5,8,42,.28)); background-blend-mode:soft-light; padding-inline:16px; gap:8px; }
+:root[data-theme="ig2"] .msg-group { max-width:min(82%,560px); }
+:root[data-theme="ig2"] .msg-group.me { align-self:flex-start; padding-left:0; padding-right:42px; }
+:root[data-theme="ig2"] .msg-group.other { align-self:flex-end; padding-right:0; padding-left:42px; }
+:root[data-theme="ig2"] .msg-group.me .bubble { background:var(--msg-me-bg); border:1px solid rgba(214,241,255,.24); border-radius:24px 24px 6px 24px; box-shadow:var(--msg-me-shadow); }
+:root[data-theme="ig2"] .msg-group.other .bubble { background:var(--msg-other-bg); border:1px solid rgba(151,165,255,.16); border-radius:24px 24px 24px 6px; box-shadow:0 8px 22px rgba(5,5,44,.3); color:#eef0ff; }
+:root[data-theme="ig2"] .msg-group .msg-time { color:#d8dcff; }
+:root[data-theme="ig2"] .msg-group.me .msg-time { text-align:left; }
+:root[data-theme="ig2"] .ig2-message-avatar { position:absolute; right:0; bottom:3px; width:34px; height:34px; border-radius:50%; overflow:hidden; background:linear-gradient(135deg,#5b65ff,#a436ff); border:2px solid rgba(229,232,255,.85); box-shadow:0 4px 14px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; color:#fff; font-size:.8rem; font-weight:800; }
+:root[data-theme="ig2"] .ig2-message-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+:root[data-theme="ig2"] .msg-group.me .ig2-message-avatar { display:none; }
+:root[data-theme="ig2"] .input-container { background:rgba(7,9,44,.82); border-top:1px solid rgba(186,193,255,.18); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
+:root[data-theme="ig2"] .input-wrapper { background:rgba(31,28,91,.86); border:1px solid rgba(172,181,255,.24); border-radius:28px; min-height:50px; }
+:root[data-theme="ig2"] .input-wrapper textarea { color:#fff; }
+:root[data-theme="ig2"] .input-wrapper textarea::placeholder { color:#c9ccef; }
+:root[data-theme="ig2"] .attach-btn, :root[data-theme="ig2"] .mic-btn { color:#eef0ff; }
+:root[data-theme="ig2"] .send-btn { color:#fff; background:linear-gradient(135deg,#39dce8,#743cff); }
+:root[data-theme="ig2"] .reply-bar { background:rgba(28,27,89,.9); border-inline-start-color:#50dce8; }
+:root[data-theme="ig2"] #pinned-bar { background:rgba(13,15,66,.8); }
 #fs-toggle-btn:active { transform: scale(.92); }
 #fs-toggle-btn { position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border:1px solid var(--glass-border); border-radius:50%; background:var(--card-bg); color:var(--text-muted); cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.28); -webkit-tap-highlight-color:transparent; }
 #fs-toggle-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
@@ -941,8 +988,9 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
   <button type="button" class="theme-option" data-theme-option="neon"><span class="theme-dot neon"><i class="fa-solid fa-bolt"></i></span><span class="theme-option-name">Neon</span><i class="fa-solid fa-check theme-option-check"></i></button>
   <button type="button" class="theme-option" data-theme-option="mono"><span class="theme-dot mono"><i class="fa-solid fa-circle-half-stroke"></i></span><span class="theme-option-name">Mono</span><i class="fa-solid fa-check theme-option-check"></i></button>
   <button type="button" class="theme-option" data-theme-option="light"><span class="theme-dot light"><i class="fa-solid fa-sun"></i></span><span class="theme-option-name">Light</span><i class="fa-solid fa-check theme-option-check"></i></button>
-<button type="button" class="theme-option" data-theme-option="telegram"><span class="theme-dot telegram"><i class="fa-brands fa-telegram"></i></span><span class="theme-option-name">Telegram</span><i class="fa-solid fa-check theme-option-check"></i></button>
+  <button type="button" class="theme-option" data-theme-option="telegram"><span class="theme-dot telegram"><i class="fa-brands fa-telegram"></i></span><span class="theme-option-name">Telegram</span><i class="fa-solid fa-check theme-option-check"></i></button>
   <button type="button" class="theme-option" data-theme-option="future-midnight"><span class="theme-dot future-midnight"><i class="fa-solid fa-moon"></i></span><span class="theme-option-name">Future Midnight</span><i class="fa-solid fa-check theme-option-check"></i></button>
+  <button type="button" class="theme-option" data-theme-option="ig2"><span class="theme-dot ig2"><i class="fa-solid fa-star"></i></span><span class="theme-option-name">IG2</span><i class="fa-solid fa-check theme-option-check"></i></button>
 </div>
 
 <!-- ═══════ Watch Together Room ═══════ -->
@@ -1491,7 +1539,7 @@ function initLanguage() {
 }
 
 // ═══════ Theme ═══════
-const THEME_LIST = ['crimson','whatsapp','instagram','neon','mono','light','telegram','future-midnight'];
+const THEME_LIST = ['crimson','whatsapp','instagram','neon','mono','light','telegram','future-midnight','ig2'];
 function setTheme(theme) {
   if (!THEME_LIST.includes(theme)) theme = 'crimson';
   localStorage.setItem('private-chat-theme', theme);
@@ -2719,6 +2767,7 @@ async function openChat(fn) {
       const al = ae.querySelector('.avatar-letter');
       if (al) al.style.display = 'none';
       ae.insertAdjacentHTML('afterbegin', `<img class="avatar-img" src="${escapeHtml(safeUrl(p.avatar_url))}" alt="">`);
+      syncIg2MessageAvatars();
     }
     if (p.display_name) ne.innerText = p.display_name;
   });
@@ -2877,6 +2926,15 @@ function buildSnippet(msg, max = 90) {
 }
 
 // ═══════ Build Message ═══════
+function syncIg2MessageAvatars() {
+  const src = document.querySelector('#chat-avatar .avatar-img')?.getAttribute('src') || '';
+  document.querySelectorAll('.ig2-message-avatar').forEach(node => {
+    if (!src) return;
+    let img = node.querySelector('img');
+    if (!img) { node.textContent = ''; img = document.createElement('img'); node.appendChild(img); }
+    img.src = src;
+  });
+}
 function buildMessageGroup(msg) {
   const isMe = msg.sender === currentUser;
   const group = document.createElement('div');
@@ -2888,10 +2946,12 @@ function buildMessageGroup(msg) {
   const ts = new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   const ticks = isMe ? `<span class="read-receipts ${receiptClassFor()}"><i class="fa-solid fa-check"></i><i class="fa-solid fa-check"></i></span>` : '';
   const editedTag = payload.editedAt ? `<span class="edited-badge">${t('msg.edited')}</span>` : '';
+  const friendAvatar = !isMe ? document.querySelector('#chat-avatar .avatar-img')?.getAttribute('src') : '';
+  const friendAvatarMarkup = !isMe ? `<div class="ig2-message-avatar">${friendAvatar ? `<img src="${escapeHtml(friendAvatar)}" alt="">` : escapeHtml((currentChatFriend || 'U').charAt(0).toUpperCase())}</div>` : '';
   const bom = isMedia
     ? `<div class="media-content" data-raw-content="${escapeHtml(msg.content || '')}">${renderMessageContent(msg)}</div><span class="msg-time">${ts}${editedTag}${ticks}</span>`
     : `<div class="bubble" data-raw-content="${escapeHtml(msg.content || '')}">${renderMessageContent(msg)}<span class="msg-meta">${ts}${editedTag}${ticks}</span></div>`;
-  group.innerHTML = `${bom}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
+  group.innerHTML = `${bom}${friendAvatarMarkup}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
   group.querySelectorAll('[data-poll-option]').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault(); e.stopPropagation();
@@ -4508,8 +4568,8 @@ function isFullscreenActive() {
 function updateFsButtonVisibility() {
   const btn = document.getElementById('fs-toggle-btn');
   if (!btn) return;
-  const inChat = chatScreen && chatScreen.classList.contains('active');
-  btn.classList.toggle('hide-fs', !!inChat);
+  // Fullscreen remains available in the chat header area as requested.
+  btn.classList.remove('hide-fs');
   const back = document.getElementById('back-btn');
   const backVisible = back && back.style.display !== 'none' && getComputedStyle(back).display !== 'none';
   btn.classList.toggle('shift-for-back', !!(backVisible && authScreen && authScreen.classList.contains('active')));
