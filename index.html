@@ -432,10 +432,13 @@ body.capture-shield-active { user-select:none !important; -webkit-user-select:no
 :root[data-theme="future-midnight"] .input-wrapper { border:1px solid rgba(143,247,220,.17); box-shadow:0 0 18px rgba(76,141,255,.1); }
 :root[data-theme="future-midnight"] .send-btn { background:var(--accent-gradient); color:#06101b; }
 #fs-toggle-btn:active { transform: scale(.92); }
+#fs-toggle-btn { position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border:1px solid var(--glass-border); border-radius:50%; background:var(--card-bg); color:var(--text-muted); cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.28); -webkit-tap-highlight-color:transparent; }
 #fs-toggle-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
 #fs-toggle-btn.hide-fs { display: none !important; }
 #fs-toggle-btn.is-fullscreen { color: var(--accent-color); border-color: var(--accent-color); }
 #fs-toggle-btn.shift-for-back { left: max(62px, calc(env(safe-area-inset-left) + 52px)); }
+html.app-fullscreen, html.app-fullscreen body { width:100%; height:100%; min-height:100dvh; overflow:hidden; }
+html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-height:none; min-height:var(--app-vh, 100dvh); }
 
 </style>
 </head>
@@ -891,6 +894,11 @@ function getSupabase() {
     return _supabase;
   } catch (e) { console.error(e); return null; }
 }
+function withTimeout(promise, ms = 15000) {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Request timed out. Check your connection and try again.')), ms); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 // ═══════ Admin-controlled security-question layer switch ═══════
 // This switch is read from Supabase. If the setting is missing or unavailable,
@@ -939,9 +947,9 @@ function setSecurityQuestionLayer(enabled) {
 async function beginSecurityChallenge(client, username, passwordHash) {
   if (!securityQuestionsEnabled) return { required: false };
   try {
-    const { data, error } = await client.rpc('begin_security_challenge', {
+    const { data, error } = await withTimeout(client.rpc('begin_security_challenge', {
       p_username: username, p_password_hash: passwordHash
-    });
+    }));
     if (error || !data) return { required: securityQuestionsEnabled, error: true };
     if (data.error) return { required: true, error: true };
     if (!data.enabled || data.exhausted) return { required: false };
@@ -1593,9 +1601,9 @@ async function completeApprovedLogin(data, uv, bindRes) {
   const sid = localStorage.getItem('chat-session-id') || (Math.random().toString(36).slice(2) + Date.now().toString(36));
   localStorage.setItem('chat-session-id', sid);
   try {
-    const { data: rows, error } = await client.rpc('begin_session', {
+    const { data: rows, error } = await withTimeout(client.rpc('begin_session', {
       p_id: data.id, p_password: currentPassword, p_session_id: sid
-    });
+    }));
     const r = Array.isArray(rows) ? rows[0] : rows;
     if (!error && r && r.allowed === false) { showError(t('session.in_use')); return; }
   } catch(e){}
@@ -1611,6 +1619,7 @@ async function completeApprovedLogin(data, uv, bindRes) {
 
 // ═══════ Auth Action ═══════
 async function handleAuthAction() {
+  if (authBtn?.disabled) return;
   hideError();
   try {
     if (authStep === 'passcode') {
@@ -1631,11 +1640,11 @@ async function handleAuthAction() {
       // Backward-compatible login: try existing plaintext credentials first,
       // then SHA-256 for accounts created after the registration fix.
       let pvHash = pv;
-      let { data: loginRows, error } = await client.rpc('login_account', { p_username: uv, p_password: pvHash });
+      let { data: loginRows, error } = await withTimeout(client.rpc('login_account', { p_username: uv, p_password: pvHash }));
       let data = Array.isArray(loginRows) ? loginRows[0] : loginRows;
       if (!error && !data) {
         const hashedPassword = await sha256Hex(pv);
-        const retry = await client.rpc('login_account', { p_username: uv, p_password: hashedPassword });
+        const retry = await withTimeout(client.rpc('login_account', { p_username: uv, p_password: hashedPassword }));
         error = retry.error;
         loginRows = retry.data;
         data = Array.isArray(loginRows) ? loginRows[0] : loginRows;
@@ -1674,7 +1683,7 @@ async function handleAuthAction() {
       authBtn.disabled = true; authBtn.style.opacity = '.7';
       // New registrations store the SHA-256 digest expected by register_account.
       const pvHash = await sha256Hex(pv);
-      const { error } = await client.rpc('register_account', { p_username: uv, p_password: pvHash });
+      const { error } = await withTimeout(client.rpc('register_account', { p_username: uv, p_password: pvHash }));
       authBtn.disabled = false; authBtn.style.opacity = '1';
       if (error) { showError(error.message || 'Error'); return; }
       toast(t('auth.success.register'), 'success');
@@ -3937,16 +3946,6 @@ if (recCancelBtn) {
 // ═══════ Auth Events ═══════
 if (authBtn) {
   authBtn.addEventListener('click', handleAuthAction);
-  // Direct fallback: keep Continue functional even if another click handler interferes.
-  authBtn.onclick = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try { await handleAuthAction(); }
-    catch (err) {
-      console.error('[Auth] Continue error:', err);
-      try { showError(t('auth.error.unexpected') + (err?.message || err)); } catch (_) {}
-    }
-  };
 }
 document.getElementById('input-passcode')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); handleAuthAction(); }
@@ -4372,7 +4371,7 @@ renderFontOptions();
 
 // ═══════ Fullscreen toggle ═══════
 function isFullscreenActive() {
-  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.documentElement.classList.contains('app-fullscreen'));
 }
 function updateFsButtonVisibility() {
   const btn = document.getElementById('fs-toggle-btn');
@@ -4391,20 +4390,26 @@ function updateFsButtonVisibility() {
   btn.title = on ? 'Exit Fullscreen' : 'Fullscreen';
 }
 async function toggleFullscreen() {
+  const root = document.documentElement;
+  let wasNativeFullscreen = false;
   try {
-    if (isFullscreenActive()) {
+    wasNativeFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    if (wasNativeFullscreen) {
       if (document.exitFullscreen) await document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.msExitFullscreen) document.msExitFullscreen();
     } else {
-      const el = document.documentElement;
-      if (el.requestFullscreen) await el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      else if (el.msRequestFullscreen) el.msRequestFullscreen();
+      if (root.requestFullscreen) await root.requestFullscreen();
+      else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
+      else if (root.msRequestFullscreen) await root.msRequestFullscreen();
+      else root.classList.add('app-fullscreen');
     }
   } catch (e) {
-    try { toast('Fullscreen not available on this browser', 'error'); } catch (_) {}
+    // Some mobile browsers expose the API but reject it outside a user gesture.
+    // Keep the app usable with a CSS viewport fallback instead of leaving the UI stuck.
+    root.classList.toggle('app-fullscreen', !root.classList.contains('app-fullscreen'));
   }
+  if (wasNativeFullscreen) root.classList.remove('app-fullscreen');
   setTimeout(updateFsButtonVisibility, 80);
 }
 document.getElementById('fs-toggle-btn')?.addEventListener('click', e => {
@@ -4473,77 +4478,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else initApp();
 
 // ═══════ End of Script ═══════
-</script>
-<script>
-// Auth button hard-fallback: independent of the main event system.
-(function () {
-  const SHA = '41344c13ed69509398316b70be0790aa387c10f6b4968de2c0b55ca210dc7231';
-  const FNV = 'fnv_2a26aa05';
-  function fallbackError(msg) {
-    const box = document.getElementById('error-box');
-    if (box) { box.textContent = msg || 'Invalid passcode'; box.style.display = 'block'; }
-  }
-  async function check(v) {
-    try {
-      if (window.crypto && crypto.subtle) {
-        const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
-        const h = Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('');
-        if (h === SHA) return true;
-      }
-      let x = 2166136261;
-      for (let i=0;i<v.length;i++) { x ^= v.charCodeAt(i); x = Math.imul(x,16777619) >>> 0; }
-      return ('fnv_' + x.toString(16)) === FNV;
-    } catch (_) { return false; }
-  }
-  async function run(e) {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-
-    // The direct handler is used as a safety net for every auth stage.
-    // Do not run passcode validation again after we have reached Login/Register.
-    const step = (typeof authStep !== 'undefined') ? authStep : 'passcode';
-    if (step === 'login' || step === 'register') {
-      try {
-        if (typeof handleAuthAction === 'function') {
-          await handleAuthAction();
-          return;
-        }
-      } catch (err) {
-        const box = document.getElementById('error-box');
-        if (box) { box.textContent = err?.message || String(err); box.style.display = 'block'; }
-        return;
-      }
-    }
-
-    const input = document.getElementById('input-passcode');
-    if (!input) return;
-    const v = input.value.trim();
-    const box = document.getElementById('error-box');
-    if (box) { box.textContent=''; box.style.display='none'; }
-    if (!v) { fallbackError('Enter passcode'); return; }
-    if (!(await check(v))) { fallbackError('Invalid passcode'); return; }
-    try {
-      if (typeof switchToLogin === 'function') { switchToLogin(); return; }
-    } catch (_) {}
-    // UI fallback if the main auth function is unavailable.
-    try { authStep = 'login'; } catch (_) {}
-    const wp=document.getElementById('wrap-passcode'), wu=document.getElementById('wrap-username'), wpass=document.getElementById('wrap-password');
-    const back=document.getElementById('back-btn'), sl=document.getElementById('auth-switch-link'), ll=document.getElementById('auth-login-link'), btn=document.getElementById('auth-btn');
-    if(wp) wp.style.display='none'; if(wu) wu.style.display='flex'; if(wpass) wpass.style.display='flex';
-    if(back) back.style.display='flex'; if(sl) sl.style.display='block'; if(ll) ll.style.display='none';
-    if(btn) btn.innerText='Sign In';
-    const title=document.getElementById('auth-title'), desc=document.getElementById('auth-desc'), icon=document.getElementById('auth-icon');
-    if(title) title.innerText='Login'; if(desc) desc.innerText='Enter your account details'; if(icon) icon.className='fa-solid fa-right-to-bracket';
-  }
-  window.__directContinueAuth = run;
-  function bind() {
-    const b=document.getElementById('auth-btn');
-    if (!b || b.dataset.directAuthBound) return;
-    b.dataset.directAuthBound='1';
-    b.addEventListener('click', run, true);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
-  else bind();
-})();
 </script>
 </body>
 </html>
