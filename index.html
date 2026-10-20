@@ -187,9 +187,7 @@ button,input,textarea { font:inherit; }
 .secondary-btn:hover { border-color:var(--accent-color); background:rgba(255,255,255,.1); }
 .badge-list { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
 .badge-chip { border:1px solid var(--glass-border); border-radius:999px; padding:5px 8px; background:rgba(255,255,255,.06); color:var(--text-main); font-size:.7rem; }
-.chat-item { min-height:76px; padding:12px 14px; border-radius:18px; margin-bottom:8px; background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); }.chat-item .avatar { width:50px; height:50px; flex-basis:50px; box-shadow:0 0 18px rgba(93,101,255,.22); }.chat-item-main { flex:1; min-width:0; }.chat-item-name-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }.chat-item-name-row h4 { font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.chat-item-time { color:var(--text-muted); font-size:.68rem; white-space:nowrap; }.chat-item-preview { display:block; color:var(--text-muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.78rem; margin-top:5px; }.chat-item-sender { color:var(--accent-color); font-weight:800; margin-inline-end:4px; }.chat-item.unread .chat-item-preview { color:var(--text-main); font-weight:700; }.chat-item.unread { border-color:color-mix(in srgb,var(--accent-color) 45%,transparent); }
 .home-tools-btn { position:relative; }.home-tools-badge { position:absolute; top:-6px; right:-7px; min-width:16px; height:16px; padding:0 4px; border-radius:9px; background:#ef4444; color:#fff; font-size:.58rem; display:none; align-items:center; justify-content:center; font-weight:900; }.notification-list,.global-search-results,.dashboard-body { padding:12px; overflow:auto; max-height:62vh; }.notification-item { display:flex; gap:10px; padding:11px 9px; border-bottom:1px solid var(--glass-border); cursor:pointer; }.notification-item.unread { background:color-mix(in srgb,var(--accent-color) 9%,transparent); }.notification-item i { color:var(--accent-color); margin-top:3px; }.notification-item strong,.notification-item small { display:block; }.notification-item small { color:var(--text-muted); margin-top:3px; }.notification-empty { text-align:center; color:var(--text-muted); padding:28px 10px; }.notification-actions { display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--glass-border); }.global-search-form { display:flex; gap:8px; padding:12px; border-bottom:1px solid var(--glass-border); }.global-search-form input { flex:1; min-width:0; background:var(--input-bg); color:var(--text-main); border:1px solid var(--glass-border); border-radius:10px; padding:10px; }.global-search-result { padding:11px 8px; border-bottom:1px solid var(--glass-border); cursor:pointer; }.global-search-result:hover { background:rgba(255,255,255,.06); }.global-search-result strong,.global-search-result small { display:block; }.global-search-result small { color:var(--text-muted); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.dashboard-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }.dashboard-card { padding:12px; border:1px solid var(--glass-border); border-radius:13px; background:rgba(255,255,255,.045); }.dashboard-card strong { display:block; font-size:1.25rem; color:var(--accent-color); }.dashboard-card span { color:var(--text-muted); font-size:.72rem; }.dashboard-bar { height:8px; border-radius:8px; background:var(--glass-border); overflow:hidden; margin-top:6px; }.dashboard-bar i { display:block; height:100%; border-radius:inherit; background:var(--accent-gradient); }.dashboard-footnote { color:var(--text-muted); font-size:.72rem; text-align:center; margin-top:12px; }
-.chat-header-actions > .chat-header-icon:not(#chat-call-btn):not(.theme-btn) { display:none !important; }.chat-header-actions > .theme-btn { display:flex !important; }
 body.motion-disabled .chat-box, body.motion-disabled #chat-screen *, body.motion-disabled #home-screen * { animation:none !important; transition:none !important; }
 body.cinematic-mode #chat-screen #pinned-bar, body.cinematic-mode #chat-screen .chat-searchbar { opacity:0; pointer-events:none; }
 body.cinematic-mode #chat-screen .chat-header { min-height:42px; padding-block:5px; }
@@ -2485,12 +2483,17 @@ async function loadRecentChats() {
     const n = unreadCounts[f] || 0;
     const draft = getDraft(f);
     const preview = draft
-      ? `<span class="chat-item-preview draft">Draft: ${escapeHtml(draft.slice(0, 60))}</span>`
-      : `<span class="chat-item-preview">${lm ? `<span class="chat-item-sender">${lm.sender === currentUser ? 'You:' : escapeHtml(dn + ':')}</span>${escapeHtml(prev)}` : 'No messages yet'}</span>`;
-    if (n) d.classList.add('unread');
-    d.innerHTML = `<div class="avatar">${ai}</div><div class="chat-item-main">
-      <div class="chat-item-name-row"><h4>${escapeHtml(dn)}</h4>${tstr ? `<span class="chat-item-time">${tstr}</span>` : ''}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">${preview}<span class="chat-item-badge" style="background:var(--accent-color);color:#fff;font-size:.68rem;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:${n ? 'flex' : 'none'};align-items:center;justify-content:center;padding:0 6px;flex:none;">${n > 99 ? '99+' : n}</span></div>
+      ? `<span class="chat-item-preview draft">${escapeHtml(draft.slice(0, 60))}</span>`
+      : `<span class="chat-item-preview">${escapeHtml(prev)}</span>`;
+    d.innerHTML = `<div class="avatar">${ai}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <h4 style="font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(dn)}</h4>
+        ${tstr ? `<span style="font-size:.66rem;color:var(--text-muted);flex:none;">${tstr}</span>` : ''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        ${preview}
+        <span class="chat-item-badge" style="background:var(--accent-color);color:#fff;font-size:.68rem;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:${n ? 'flex' : 'none'};align-items:center;justify-content:center;padding:0 6px;flex:none;">${n > 99 ? '99+' : n}</span>
+      </div>
     </div>`;
     chatList.appendChild(d);
   });
