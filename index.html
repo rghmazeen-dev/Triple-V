@@ -1402,9 +1402,9 @@ async function verifyDeviceBinding(data) {
   if (!c || !data) return { allowed: true };
   const fp = await getDeviceFingerprint();
   try {
-    const { data: rows, error } = await c.rpc('sync_device_binding', {
+    const { data: rows, error } = await withTimeout(c.rpc('sync_device_binding', {
       p_id: data.id, p_password: currentPassword, p_fingerprint: fp
-    });
+    }), 12000);
     const r = Array.isArray(rows) ? rows[0] : rows;
     if (error || !r) return { allowed: true, fp }; // fail-open to match previous try/catch behaviour
     return { allowed: r.allowed, fp, bound: r.bound, justBound: r.just_bound, reason: r.reason };
@@ -3295,7 +3295,7 @@ function openMsgActions(group) {
   const raw = group.querySelector('[data-raw-content]')?.dataset.rawContent || '';
   const p = getMessagePayload({ content: raw });
   const copyBtn = document.getElementById('act-copy');
-  if (copyBtn) copyBtn.style.display = (p.type === 'text') ? 'flex' : 'none';
+  if (copyBtn) copyBtn.style.display = 'none';
   if (editBtn) {
     let canEdit = false;
     if (isMine && p.type === 'text' && msg && msg.created_at) {
@@ -4052,6 +4052,23 @@ function clearWhiteboard() {
 // ============================================================
 
 // ═══════ Input Events ═══════
+function isEditableTarget(target) {
+  return !!target?.closest?.('input, textarea, select, [contenteditable="true"]');
+}
+// Discourage copying from the protected UI while keeping all form fields usable.
+['copy', 'cut', 'dragstart', 'selectstart'].forEach(eventName => {
+  document.addEventListener(eventName, e => {
+    if (!isEditableTarget(e.target)) e.preventDefault();
+  }, true);
+});
+document.addEventListener('contextmenu', e => {
+  if (!isEditableTarget(e.target)) e.preventDefault();
+}, true);
+document.addEventListener('keydown', e => {
+  if (!isEditableTarget(e.target) && (e.ctrlKey || e.metaKey) && ['c', 'x'].includes(String(e.key).toLowerCase())) {
+    e.preventDefault();
+  }
+}, true);
 if (msgInput) {
   // Keep ONE source of truth for focus/blur: _onComposerFocus/_onComposerBlur
   // above. Having a second pair of listeners here caused competing scrolls
