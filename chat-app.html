@@ -1227,6 +1227,9 @@ function renderSecurityChallenge() {
 let currentUser = '';
 let currentAccountData = null;
 let currentPassword = ''; // kept in memory only, used to re-auth RPC calls after login
+let avatarPickerActive = false;
+let avatarPickerWasHidden = false;
+let avatarUploadActive = false;
 let currentChatFriend = '';
 let heartbeatInterval = null;
 let messageSubscription = null;
@@ -1929,6 +1932,20 @@ function stopAutoLock() {
   const ov = document.getElementById('autolock-overlay');
   if (ov) { ov.classList.remove('show'); ov.classList.remove('locked'); }
 }
+function pauseAutoLockForAvatarFlow() {
+  clearTimeout(_autoLockTimer);
+  clearTimeout(_autoLockDarkTimer);
+  const ov = document.getElementById('autolock-overlay');
+  if (ov) { ov.classList.remove('show'); ov.classList.remove('locked'); }
+}
+function resumeAutoLockAfterAvatarFlow() {
+  if (!avatarPickerActive && !avatarUploadActive && _autoLockActive && currentUser) resetAutoLockTimer();
+}
+function finishAvatarPicker() {
+  avatarPickerActive = false;
+  avatarPickerWasHidden = false;
+  resumeAutoLockAfterAvatarFlow();
+}
 function resetAutoLockTimer() {
   if (!_autoLockActive || !currentUser) return;
   clearTimeout(_autoLockTimer);
@@ -2147,23 +2164,27 @@ async function saveProfile() {
   if (!error) loadRecentChats();
 }
 async function uploadProfileAvatar(file) {
-  if (!file) return;
+  if (!file) { finishAvatarPicker(); return; }
+  avatarUploadActive = true;
+  pauseAutoLockForAvatarFlow();
+  const finishUpload = () => { avatarUploadActive = false; resumeAutoLockAfterAvatarFlow(); };
   const statusEl = document.getElementById('profile-avatar-status');
   const setStatus = (message, kind = 'info') => {
     if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.style.color = kind === 'error' ? '#ff707d' : kind === 'success' ? 'var(--success-color, #7ce3a1)' : 'var(--text-muted)';
   };
-  if (!currentUser) { setStatus('Please sign in again before changing your profile photo.', 'error'); toast('Please sign in again.', 'error'); return; }
+  if (!currentUser) { setStatus('Please sign in again before changing your profile photo.', 'error'); toast('Please sign in again.', 'error'); finishUpload(); return; }
   const c = getSupabase();
-  if (!c) { setStatus('Could not connect to the image service.', 'error'); return; }
+  if (!c) { setStatus('Could not connect to the image service.', 'error'); finishUpload(); return; }
   const supportedTypes = ['image/jpeg','image/png','image/webp','image/gif','image/avif'];
   if (!supportedTypes.includes(String(file.type || '').toLowerCase())) {
     setStatus(`Unsupported image format (${file.type || 'unknown'}). Choose JPG, PNG, WebP, GIF, or AVIF.`, 'error');
     toast('Choose a JPG, PNG, WebP, GIF, or AVIF image.', 'error');
+    finishUpload();
     return;
   }
-  if (file.size > 15.8 * 1024 * 1024) { setStatus('Image too large. Maximum size is 15.8 MB.', 'error'); toast('Image too large (maximum 15.8 MB).', 'error'); return; }
+  if (file.size > 15.8 * 1024 * 1024) { setStatus('Image too large. Maximum size is 15.8 MB.', 'error'); toast('Image too large (maximum 15.8 MB).', 'error'); finishUpload(); return; }
   const extensionByType = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif', 'image/avif':'avif' };
   const uniqueName = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const path = `avatars/${uniqueName}.${extensionByType[file.type.toLowerCase()]}`;
@@ -2197,7 +2218,7 @@ async function uploadProfileAvatar(file) {
     console.error('Profile avatar upload failed:', error);
     setStatus(`Photo upload failed: ${error?.message || 'check your connection and try again'}`, 'error');
     toast(`Photo upload failed: ${error?.message || 'check your connection and try again'}`, 'error');
-  }
+  } finally { finishUpload(); }
 }
 
 // ═══════ Productivity, Backup & Personalization ═══════
@@ -4504,10 +4525,18 @@ document.addEventListener('click', e => {
 });
 
 // ═══════ File Inputs Change ═══════
+const profileAvatarPickerInput = document.getElementById('profile-avatar-input');
+profileAvatarPickerInput?.addEventListener('click', () => {
+  avatarPickerActive = true;
+  avatarPickerWasHidden = false;
+  pauseAutoLockForAvatarFlow();
+});
+profileAvatarPickerInput?.addEventListener('cancel', finishAvatarPicker);
 document.addEventListener('change', e => {
   if (e.target.id === 'profile-avatar-input') {
     const f = e.target.files?.[0];
     if (f) uploadProfileAvatar(f);
+    finishAvatarPicker();
     e.target.value = '';
   }
   if (e.target.id === 'documents-input') {
@@ -4559,23 +4588,30 @@ document.addEventListener('keydown', e => {
 
 // ═══════ Before Unload ═══════
 window.addEventListener('beforeunload', () => {
-  if (currentAccountData?.id && currentPassword) {
+  if (!avatarPickerActive && !avatarUploadActive && currentAccountData?.id && currentPassword) {
     const c = getSupabase();
     if (c) c.rpc('end_session', { p_id: currentAccountData.id, p_password: currentPassword }).then(() => {});
   }
 });
 
 // ═══════ Session privacy on leave ═══════
-// Returning from another tab/app or a locked screen always starts at Pass code.
-window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && currentUser) {
+// Returning from another tab/app starts at Pass code, except during profile photo selection and upload.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && avatarPickerActive) {
+    avatarPickerWasHidden = true;
+  } else if (document.visibilityState === 'visible' && avatarPickerActive && avatarPickerWasHidden) {
+    finishAvatarPicker();
+  } else if (document.visibilityState === 'hidden' && currentUser && !avatarPickerActive && !avatarUploadActive) {
     try { lockAppNow(); } catch (e) { console.error('Session lock failed:', e); }
   }
 }, { passive:true });
 
 // Leaving the browser/app must never restore an authenticated chat from bfcache.
-window.addEventListener('pagehide', () => { if (currentUser) { try { lockAppNow(); } catch(e) {} } }, { passive:true });
-window.addEventListener('beforeunload', () => { if (currentUser) { try { lockAppNow(); } catch(e) {} } });
+window.addEventListener('pagehide', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive) { try { lockAppNow(); } catch(e) {} } }, { passive:true });
+window.addEventListener('beforeunload', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive) { try { lockAppNow(); } catch(e) {} } });
+window.addEventListener('focus', () => {
+  if (avatarPickerActive && avatarPickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishAvatarPicker, 150);
+}, { passive:true });
 
 // ═══════ Render Font Options ═══════
 renderFontOptions();
