@@ -195,6 +195,9 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 .profile-editor { display:flex; flex-direction:column; align-items:center; gap:10px; padding-top:4px; }
 .profile-avatar-wrap { width:92px; height:92px; flex:0 0 92px; position:relative; border-radius:50%; overflow:hidden; background:rgba(255,255,255,.07); border:2px solid var(--accent-color); display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; }
 .profile-avatar-wrap .avatar-img { width:100%; height:100%; object-fit:cover; }
+.profile-avatar-input { position:absolute; inset:0; z-index:3; width:100%; height:100%; opacity:0; cursor:pointer; }
+.profile-avatar-input:focus-visible { opacity:.01; outline:3px solid var(--accent-color); outline-offset:-4px; }
+.profile-avatar-status { min-height:18px; width:100%; text-align:center; color:var(--text-muted); font-size:.76rem; line-height:1.45; overflow-wrap:anywhere; }
 .profile-avatar-placeholder { color:var(--text-muted); font-size:2rem; }
 .profile-avatar-edit { position:absolute; right:3px; bottom:3px; width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--accent-color); color:#fff; border:2px solid var(--bg-main); font-size:.72rem; pointer-events:none; }
 .profile-name-input { width:100%; box-sizing:border-box; min-height:46px; padding:10px 13px; border-radius:12px; border:1px solid var(--glass-border); outline:none; background:var(--bg-main); color:var(--text-main); font:inherit; }
@@ -684,8 +687,9 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
             <img id="profile-avatar-img" class="avatar-img" style="display:none;" alt="">
             <i class="fa-solid fa-user profile-avatar-placeholder" id="profile-avatar-placeholder"></i>
             <div class="profile-avatar-edit"><i class="fa-solid fa-camera"></i></div>
+            <input type="file" id="profile-avatar-input" class="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" aria-label="Choose profile photo">
           </div>
-          <input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style="display:none;">
+          <div class="profile-avatar-status" id="profile-avatar-status" role="status" aria-live="polite"></div>
           <input type="text" id="profile-name-input" class="profile-name-input" placeholder="Your display name in chat" maxlength="30" autocomplete="off">
           <input type="text" id="profile-status-input" class="profile-name-input" placeholder="Status / mood" maxlength="60" autocomplete="off">
           <textarea id="profile-bio-input" class="profile-name-input" placeholder="Short bio" maxlength="140" rows="2"></textarea>
@@ -2143,17 +2147,27 @@ async function saveProfile() {
   if (!error) loadRecentChats();
 }
 async function uploadProfileAvatar(file) {
-  if (!file || !currentUser) return;
-  const c = getSupabase(); if (!c) return;
+  if (!file) return;
+  const statusEl = document.getElementById('profile-avatar-status');
+  const setStatus = (message, kind = 'info') => {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.style.color = kind === 'error' ? '#ff707d' : kind === 'success' ? 'var(--success-color, #7ce3a1)' : 'var(--text-muted)';
+  };
+  if (!currentUser) { setStatus('Please sign in again before changing your profile photo.', 'error'); toast('Please sign in again.', 'error'); return; }
+  const c = getSupabase();
+  if (!c) { setStatus('Could not connect to the image service.', 'error'); return; }
   const supportedTypes = ['image/jpeg','image/png','image/webp','image/gif','image/avif'];
   if (!supportedTypes.includes(String(file.type || '').toLowerCase())) {
+    setStatus(`Unsupported image format (${file.type || 'unknown'}). Choose JPG, PNG, WebP, GIF, or AVIF.`, 'error');
     toast('Choose a JPG, PNG, WebP, GIF, or AVIF image.', 'error');
     return;
   }
-  if (file.size > 15.8 * 1024 * 1024) { toast('Image too large (maximum 15.8 MB).', 'error'); return; }
+  if (file.size > 15.8 * 1024 * 1024) { setStatus('Image too large. Maximum size is 15.8 MB.', 'error'); toast('Image too large (maximum 15.8 MB).', 'error'); return; }
   const extensionByType = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif', 'image/avif':'avif' };
   const uniqueName = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const path = `avatars/${uniqueName}.${extensionByType[file.type.toLowerCase()]}`;
+  setStatus(`Uploading ${file.name}…`);
   try {
     const { error: uploadError } = await c.storage.from(CHAT_FILES_BUCKET).upload(path, file, {
       upsert: false,
@@ -2176,10 +2190,12 @@ async function uploadProfileAvatar(file) {
     }
 
     setProfileAvatar(url);
+    setStatus('Profile photo updated.', 'success');
     loadRecentChats();
     toast('Profile photo updated.', 'success');
   } catch (error) {
     console.error('Profile avatar upload failed:', error);
+    setStatus(`Photo upload failed: ${error?.message || 'check your connection and try again'}`, 'error');
     toast(`Photo upload failed: ${error?.message || 'check your connection and try again'}`, 'error');
   }
 }
@@ -4296,10 +4312,6 @@ document.addEventListener('click', e => {
     h.classList.toggle('open');
     const b = document.getElementById(h.dataset.toggleSection);
     if (b) b.classList.toggle('show');
-    return;
-  }
-  if (t.closest('#profile-avatar-wrap')) {
-    document.getElementById('profile-avatar-input').click();
     return;
   }
   if (t.closest('#profile-save-btn')) { saveProfile(); return; }
