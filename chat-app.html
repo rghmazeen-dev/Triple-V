@@ -685,7 +685,7 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
             <i class="fa-solid fa-user profile-avatar-placeholder" id="profile-avatar-placeholder"></i>
             <div class="profile-avatar-edit"><i class="fa-solid fa-camera"></i></div>
           </div>
-          <input type="file" id="profile-avatar-input" accept="image/*" style="display:none;">
+          <input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style="display:none;">
           <input type="text" id="profile-name-input" class="profile-name-input" placeholder="Your display name in chat" maxlength="30" autocomplete="off">
           <input type="text" id="profile-status-input" class="profile-name-input" placeholder="Status / mood" maxlength="60" autocomplete="off">
           <textarea id="profile-bio-input" class="profile-name-input" placeholder="Short bio" maxlength="140" rows="2"></textarea>
@@ -2145,17 +2145,43 @@ async function saveProfile() {
 async function uploadProfileAvatar(file) {
   if (!file || !currentUser) return;
   const c = getSupabase(); if (!c) return;
-  if (!file.type.startsWith('image/')) { toast('Please select an image file.', 'error'); return; }
-  if (file.size > 15800000) { toast('Image too large (max 15.8MB)', 'error'); return; }
-  const path = `avatars/${currentUser}_${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-  const { error: ue } = await c.storage.from(CHAT_FILES_BUCKET).upload(path, file, { upsert: false, contentType: file.type });
-  if (ue) { toast('Failed to upload', 'error'); return; }
-  const { data: ud } = c.storage.from(CHAT_FILES_BUCKET).getPublicUrl(path);
-  const url = ud?.publicUrl;
-  if (!url) { toast('Failed to upload', 'error'); return; }
-  setProfileAvatar(url);
-  await c.from('profiles').upsert({ username: currentUser, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'username' });
-  loadRecentChats();
+  const supportedTypes = ['image/jpeg','image/png','image/webp','image/gif','image/avif'];
+  if (!supportedTypes.includes(String(file.type || '').toLowerCase())) {
+    toast('Choose a JPG, PNG, WebP, GIF, or AVIF image.', 'error');
+    return;
+  }
+  if (file.size > 15.8 * 1024 * 1024) { toast('Image too large (maximum 15.8 MB).', 'error'); return; }
+  const extensionByType = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif', 'image/avif':'avif' };
+  const uniqueName = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const path = `avatars/${uniqueName}.${extensionByType[file.type.toLowerCase()]}`;
+  try {
+    const { error: uploadError } = await c.storage.from(CHAT_FILES_BUCKET).upload(path, file, {
+      upsert: false,
+      contentType: file.type.toLowerCase(),
+      cacheControl: '3600'
+    });
+    if (uploadError) throw new Error(`Storage: ${uploadError.message || uploadError}`);
+
+    const { data: publicData } = c.storage.from(CHAT_FILES_BUCKET).getPublicUrl(path);
+    const url = publicData?.publicUrl;
+    if (!url) throw new Error('Supabase did not return a public image URL.');
+
+    const { error: profileError } = await c.from('profiles').upsert(
+      { username: currentUser, avatar_url: url, updated_at: new Date().toISOString() },
+      { onConflict: 'username' }
+    );
+    if (profileError) {
+      await c.storage.from(CHAT_FILES_BUCKET).remove([path]);
+      throw new Error(`Profile save: ${profileError.message || profileError}`);
+    }
+
+    setProfileAvatar(url);
+    loadRecentChats();
+    toast('Profile photo updated.', 'success');
+  } catch (error) {
+    console.error('Profile avatar upload failed:', error);
+    toast(`Photo upload failed: ${error?.message || 'check your connection and try again'}`, 'error');
+  }
 }
 
 // ═══════ Productivity, Backup & Personalization ═══════
@@ -4470,6 +4496,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'profile-avatar-input') {
     const f = e.target.files?.[0];
     if (f) uploadProfileAvatar(f);
+    e.target.value = '';
   }
   if (e.target.id === 'documents-input') {
     const f = e.target.files?.[0];
