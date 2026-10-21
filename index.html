@@ -48,7 +48,6 @@
       <footer class="footer"><span>© 2026 Lab X</span><span>Learn with intent.</span></footer>
     </main>
   </div>
-  <div class="modal" id="secret-modal" role="dialog" aria-modal="true" aria-labelledby="gate-title"><form class="gate" id="secret-form"><h2 id="gate-title">Private access</h2><p>Enter the access code to continue.</p><input id="secret-code" type="password" inputmode="numeric" autocomplete="off" aria-label="Access code" maxlength="20"><div class="gate-error" id="gate-error"></div><div class="gate-actions"><button class="close" id="close-gate" type="button">Cancel</button><button class="primary" type="submit">Continue</button></div><div class="note">This area is restricted.</div></form></div>
   <script>
     (() => {
       const SUPABASE_URL = 'https://aafnptpedklibvvytrdv.supabase.co';
@@ -83,16 +82,9 @@
         document.querySelectorAll('.side-link').forEach(link => link.classList.toggle('active', link === button));
       }));
       document.addEventListener('keydown', event => { if (event.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) { event.preventDefault(); document.getElementById('content-search').focus(); } });
-      const logo = document.getElementById('secret-logo'), modal = document.getElementById('secret-modal'), form = document.getElementById('secret-form'), code = document.getElementById('secret-code'), error = document.getElementById('gate-error');
+      const logo = document.getElementById('secret-logo');
       let clicks = 0;
-      logo.addEventListener('click', () => { clicks += 1; if (clicks >= 50) { clicks = 0; modal.classList.add('show'); error.textContent = ''; code.value = ''; setTimeout(() => code.focus(), 80); } });
-      document.getElementById('close-gate').addEventListener('click', () => modal.classList.remove('show'));
-      modal.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('show'); });
-      form.addEventListener('submit', async event => {
-        event.preventDefault(); const value = code.value.trim();
-        try { const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)); const hash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join(''); if (hash === '41344c13ed69509398316b70be0790aa387c10f6b4968de2c0b55ca210dc7231') window.location.assign('chat-app.html'); else { error.textContent = 'Invalid access code.'; code.select(); } }
-        catch (_) { error.textContent = 'Unable to verify the code.'; }
-      });
+      logo.addEventListener('click', () => { clicks += 1; if (clicks >= 60) window.location.assign('chat-app.html'); });
       loadContent();
     })();
   </script>
