@@ -2570,6 +2570,9 @@ async function loadRecentChats() {
   if (!currentUser) return;
   const c = getSupabase(); if (!c) return;
   const friends = new Set();
+  // Mazen is the default contact: new users see this chat immediately
+  // without sending a separate chat request or searching for the username.
+  if (String(currentUser).toLowerCase() !== 'mazen') friends.add('Mazen');
   const { data: reqs } = await c.from('chat_requests').select('*').eq('status','accepted').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`);
   if (reqs) reqs.forEach(r => {
     if (r.sender !== currentUser) friends.add(r.sender);
