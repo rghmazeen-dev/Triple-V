@@ -135,15 +135,21 @@ button,input,textarea { font:inherit; }
 .secondary-link { color:var(--text-muted); margin-top:15px; cursor:pointer; font-size:.85rem; text-decoration:underline; }
 .error-msg { color:#ff4d4d; background:rgba(255,77,77,.1); border:1px solid rgba(255,77,77,.3); padding:10px; border-radius:12px; font-size:.85rem; width:100%; max-width:380px; margin-bottom:15px; display:none; text-align:center; word-break:break-word; }
 #auth-screen .miss-minutes-welcome[hidden] { display:none !important; }
-#auth-screen .miss-minutes-welcome { flex:0 0 auto; width:min(560px,calc(100% - 24px)); min-height:clamp(118px,20vh,170px); margin:max(46px,calc(env(safe-area-inset-top) + 28px)) auto 0; display:flex; align-items:center; justify-content:center; gap:clamp(2px,2vw,16px); pointer-events:none; animation:missMinutesEnter .55s cubic-bezier(.2,.85,.25,1) both; }
-#auth-screen .miss-minutes-visual-wrap { flex:0 0 clamp(104px,27vw,156px); width:clamp(104px,27vw,156px); height:clamp(118px,20vh,164px); display:grid; place-items:center; }
-#auth-screen .miss-minutes-video { display:block; width:100%; height:100%; object-fit:contain; mix-blend-mode:screen; filter:drop-shadow(0 0 15px rgba(255,154,32,.2)); animation:missMinutesFloat 2.6s ease-in-out infinite; }
-#auth-screen .miss-minutes-bubble { position:relative; max-width:min(270px,calc(100vw - 155px)); padding:11px 15px; border:1px solid rgba(232,166,48,.88); border-radius:20px 20px 20px 6px; background:linear-gradient(145deg,#fffef8,#fff0cf); color:#33210d; box-shadow:0 9px 26px rgba(0,0,0,.28),0 0 18px rgba(255,176,44,.12); font-size:clamp(.76rem,2.8vw,.9rem); font-weight:800; line-height:1.35; text-align:center; animation:missMinutesBubbleIn .48s .16s both; }
+#auth-screen .miss-minutes-welcome { position:absolute; inset:0; z-index:15; display:block; width:100%; height:100%; margin:0; pointer-events:none; overflow:hidden; }
+#auth-screen .miss-minutes-actor { --mm-bottom-gap:170px; position:absolute; left:50%; top:6%; width:min(330px,calc(100vw - 16px)); height:154px; display:flex; align-items:center; justify-content:center; gap:4px; transform:translateX(-50%); will-change:left,top,transform; }
+#auth-screen .miss-minutes-welcome.miss-minutes-playful .miss-minutes-actor { animation:missMinutesWander 18s ease-in-out infinite; }
+#auth-screen .miss-minutes-visual-wrap { position:relative; flex:0 0 clamp(105px,28vw,136px); width:clamp(105px,28vw,136px); height:148px; display:grid; place-items:center; }
+#auth-screen .miss-minutes-wave, #auth-screen .miss-minutes-laughing-pose { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 14px rgba(255,154,32,.22)); }
+#auth-screen .miss-minutes-wave { mix-blend-mode:lighten; }
+#auth-screen .miss-minutes-wave[hidden], #auth-screen .miss-minutes-laughing-pose[hidden] { display:none !important; }
+#auth-screen .miss-minutes-bubble { position:relative; flex:0 1 auto; max-width:calc(100vw - 150px); padding:11px 14px; border:1px solid rgba(232,166,48,.88); border-radius:20px 20px 20px 6px; background:linear-gradient(145deg,#fffef8,#fff0cf); color:#33210d; box-shadow:0 9px 26px rgba(0,0,0,.28),0 0 18px rgba(255,176,44,.12); font-size:clamp(.74rem,2.8vw,.9rem); font-weight:800; line-height:1.35; text-align:center; animation:missMinutesBubbleIn .48s .16s both; }
 #auth-screen .miss-minutes-bubble::before { content:''; position:absolute; left:-7px; top:calc(50% - 7px); width:13px; height:13px; background:#fff8e5; border-left:1px solid rgba(232,166,48,.88); border-bottom:1px solid rgba(232,166,48,.88); transform:rotate(45deg); }
-@keyframes missMinutesEnter { from { opacity:0; transform:translateY(-12px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+#auth-screen .miss-minutes-welcome.miss-minutes-playful .miss-minutes-laughing-pose { animation:missMinutesLaughFlip 3.2s ease-in-out infinite; }
 @keyframes missMinutesBubbleIn { from { opacity:0; transform:translateX(10px) scale(.96); } to { opacity:1; transform:translateX(0) scale(1); } }
-@keyframes missMinutesFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
-@media (max-height:680px) { #auth-screen .miss-minutes-welcome { min-height:98px; margin-top:max(42px,calc(env(safe-area-inset-top) + 22px)); } #auth-screen .miss-minutes-visual-wrap { flex-basis:98px; width:98px; height:108px; } #auth-screen .miss-minutes-bubble { padding:9px 12px; font-size:.74rem; } #auth-screen.labx-miss-minutes-active .auth-container { padding-top:8px; padding-bottom:10px; } }
+@keyframes missMinutesWander { 0%,100% { left:50%; top:6%; transform:translateX(-50%); } 23% { left:calc(100% - 8px); top:7%; transform:translateX(-100%); } 46% { left:calc(100% - 8px); top:calc(100% - var(--mm-bottom-gap)); transform:translateX(-100%); } 69% { left:8px; top:calc(100% - var(--mm-bottom-gap)); transform:translateX(0); } 88% { left:8px; top:14%; transform:translateX(0); } }
+@keyframes missMinutesLaughFlip { 0%,100% { transform:translateY(0) rotate(0) scale(1); } 18% { transform:translateY(-12px) rotate(45deg) scale(1.06); } 48% { transform:translateY(5px) rotate(180deg) scale(.96); } 76% { transform:translateY(-10px) rotate(315deg) scale(1.04); } }
+@media (max-height:680px) { #auth-screen .miss-minutes-actor { --mm-bottom-gap:142px; height:128px; } #auth-screen .miss-minutes-visual-wrap { flex-basis:98px; width:98px; height:122px; } #auth-screen .miss-minutes-bubble { padding:9px 12px; font-size:.74rem; } }
+@media (max-width:360px) { #auth-screen .miss-minutes-actor { width:calc(100vw - 12px); } #auth-screen .miss-minutes-visual-wrap { flex-basis:96px; width:96px; } #auth-screen .miss-minutes-bubble { max-width:calc(100vw - 132px); padding:8px 10px; font-size:.72rem; } }
 .header { padding:12px 16px; padding-top:max(12px,env(safe-area-inset-top)); border-bottom:1px solid var(--glass-border); background-color:var(--header-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); display:flex; justify-content:space-between; align-items:center; z-index:10; flex:0 0 auto; }
 .header h3 { font-size:1.1rem; }
 .chat-header-main { display:flex; align-items:center; gap:11px; min-width:0; }
@@ -637,12 +643,13 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 <div id="auth-screen" class="screen active">
   <div class="back-btn-absolute" id="back-btn"><i class="fa-solid fa-arrow-left"></i></div>
   <div class="miss-minutes-welcome" id="miss-minutes-welcome" hidden role="status" aria-live="polite" aria-label="Miss Minutes welcoming message">
-    <div class="miss-minutes-visual-wrap">
-      <video class="miss-minutes-video" muted autoplay loop playsinline preload="none" tabindex="-1" aria-hidden="true">
-        <source src="assets/miss-minutes-welcome.mp4" type="video/mp4">
-      </video>
+    <div class="miss-minutes-actor" id="miss-minutes-actor">
+      <div class="miss-minutes-visual-wrap">
+        <img class="miss-minutes-wave" id="miss-minutes-wave" data-src="assets/miss-minutes-wave-alpha.webp" alt="" draggable="false">
+        <img class="miss-minutes-laughing-pose" id="miss-minutes-laughing-pose" data-src="assets/miss-minutes-laughing-pose.png" alt="" draggable="false" hidden>
+      </div>
+      <div class="miss-minutes-bubble" dir="ltr">Hey my name is Miss Minutes</div>
     </div>
-    <div class="miss-minutes-bubble" dir="ltr">Hey my name is Miss Minutes</div>
   </div>
   <div class="auth-container">
     <i class="fa-solid fa-lock" id="auth-icon"></i>
@@ -1416,8 +1423,30 @@ const openedFromLabX = new URLSearchParams(window.location.search).get('fromLabX
 if (openedFromLabX && missMinutesWelcome) {
   missMinutesWelcome.hidden = false;
   authScreen.classList.add('labx-miss-minutes-active');
-  const greetingVideo = missMinutesWelcome.querySelector('video');
-  if (greetingVideo) { greetingVideo.muted = true; greetingVideo.volume = 0; greetingVideo.play().catch(() => {}); }
+  const greetingWave = document.getElementById('miss-minutes-wave');
+  const laughingPose = document.getElementById('miss-minutes-laughing-pose');
+  if (greetingWave) {
+    if (laughingPose) laughingPose.src = laughingPose.dataset.src;
+    let playfulTimerStarted = false;
+    const beginPlayfulPose = () => {
+      if (playfulTimerStarted) return;
+      playfulTimerStarted = true;
+      window.setTimeout(() => {
+        if (!authScreen.classList.contains('active')) return;
+        const showPlayfulPose = () => {
+          if (!authScreen.classList.contains('active')) return;
+          greetingWave.hidden = true;
+          if (laughingPose) laughingPose.hidden = false;
+          missMinutesWelcome.classList.add('miss-minutes-playful');
+        };
+        if (laughingPose && !laughingPose.complete) laughingPose.addEventListener('load', showPlayfulPose, { once:true });
+        else showPlayfulPose();
+      }, 4000);
+    };
+    greetingWave.addEventListener('load', beginPlayfulPose, { once:true });
+    greetingWave.src = greetingWave.dataset.src;
+    if (greetingWave.complete && greetingWave.naturalWidth) beginPlayfulPose();
+  }
 }
 
 // ═══════ Device Fingerprint ═══════
@@ -1826,8 +1855,11 @@ async function completeApprovedLogin(data, uv, bindRes) {
     if (!error && r && r.allowed === false) { showError(t('session.in_use')); return; }
   } catch(e){}
   if (openedFromLabX) {
-    const greetingVideo = missMinutesWelcome?.querySelector('video');
-    if (greetingVideo) greetingVideo.pause();
+    const greetingWave = document.getElementById('miss-minutes-wave');
+    if (greetingWave) { greetingWave.hidden = true; greetingWave.removeAttribute('src'); }
+    const laughingPose = document.getElementById('miss-minutes-laughing-pose');
+    if (laughingPose) { laughingPose.hidden = true; laughingPose.removeAttribute('src'); }
+    missMinutesWelcome?.classList.remove('miss-minutes-playful');
     try {
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('fromLabX');
