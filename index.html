@@ -104,7 +104,7 @@
       }
       document.getElementById('grade-lock').addEventListener('click', () => {
         clicks += 1; showToast('مينفعش تغيّر السنة الدراسية بعد ما تختارها.');
-        if (clicks >= 60) window.location.assign('chat-app.html');
+        if (clicks >= 60) window.location.assign('chat-app.html?fromLabX=1');
       });
       document.getElementById('brand-logo').addEventListener('click', () => {});
       document.getElementById('content-search').addEventListener('input', renderContent);
