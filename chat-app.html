@@ -215,6 +215,9 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 .msg-group:has(.poll-card) { max-width:85%; }
 .bubble { padding:8px 12px; border-radius:var(--bubble-other-radius); font-size:.92rem; line-height:1.5; word-break:break-word; overflow-wrap:anywhere; white-space:pre-wrap; direction:rtl; text-align:right; unicode-bidi:plaintext; max-width:100%; cursor:default; background:var(--msg-other-bg); color:var(--text-main); border:1px solid transparent; position:relative; box-shadow:0 1px 2px rgba(0,0,0,.15); }
 .msg-group.me .bubble { background:var(--msg-me-bg); color:#fff; border-radius:var(--bubble-me-radius); box-shadow:var(--msg-me-shadow); border:1px solid transparent; }
+.message-sender-name { display:block; margin:0 0 3px; color:#ffec9d; font-size:.69rem; line-height:1.15; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.msg-group.other + .msg-group.other .message-sender-name { display:none; }
+:root[data-theme="light"] .msg-group.other .bubble .message-sender-name, :root[data-theme="whatsapp"] .msg-group.other .bubble .message-sender-name { color:#806400; text-shadow:none; }
 :root[data-theme="whatsapp"] .msg-group.other .bubble::before { content:''; position:absolute; left:-8px; top:0; width:0; height:0; border-style:solid; border-width:0 10px 10px 0; border-color:transparent var(--msg-other-bg) transparent transparent; }
 :root[data-theme="whatsapp"] .msg-group.me .bubble::before { content:''; position:absolute; right:-8px; top:0; width:0; height:0; border-style:solid; border-width:10px 10px 0 0; border-color:var(--msg-me-bg) transparent transparent transparent; }
 :root[data-theme="light"] .msg-group.other .bubble::before { content:''; position:absolute; left:-8px; top:0; width:0; height:0; border-style:solid; border-width:0 10px 10px 0; border-color:transparent var(--msg-other-bg) transparent transparent; }
@@ -283,7 +286,8 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 .poll-results { color:var(--text-muted); font-size:.6rem; text-align:right; margin-top:2px; }
 .bubble .poll-card, .bubble .poll-card * { white-space:normal; }
 .msg-group.media { max-width:75%; width:fit-content; }
-.media-content { border-radius:18px; overflow:hidden; line-height:0; display:block; width:fit-content; height:auto; }
+.media-content { border-radius:18px; overflow:hidden; line-height:0; display:block; width:fit-content; height:auto; position:relative; }
+.media-sender-name { position:absolute; top:8px; inset-inline-start:8px; z-index:2; max-width:calc(100% - 16px); margin:0; padding:3px 7px; border-radius:8px; background:rgba(0,0,0,.58); color:#ffec9d; font-size:.69rem; line-height:1.15; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .media-content a { display:block; line-height:0; }
 .media-content img.attachment-preview-image { max-width:100%; max-height:260px; height:auto; border-radius:18px; display:block; }
 .media-content video.attachment-preview-video { max-width:100%; max-height:260px; border-radius:18px; display:block; }
@@ -2978,9 +2982,11 @@ function buildMessageGroup(msg) {
   const editedTag = payload.editedAt ? `<span class="edited-badge">${t('msg.edited')}</span>` : '';
   const friendAvatar = !isMe ? document.querySelector('#chat-avatar .avatar-img')?.getAttribute('src') : '';
   const friendAvatarMarkup = !isMe ? `<div class="ig2-message-avatar">${friendAvatar ? `<img src="${escapeHtml(friendAvatar)}" alt="">` : escapeHtml((currentChatFriend || 'U').charAt(0).toUpperCase())}</div>` : '';
+  const senderNameMarkup = !isMe ? `<div class="message-sender-name">${escapeHtml(currentChatFriend || 'User')}</div>` : '';
+  const mediaSenderNameMarkup = !isMe ? `<div class="message-sender-name media-sender-name">${escapeHtml(currentChatFriend || 'User')}</div>` : '';
   const bom = isMedia
-    ? `<div class="media-content" data-raw-content="${escapeHtml(msg.content || '')}">${renderMessageContent(msg)}</div><span class="msg-time">${ts}${editedTag}${ticks}</span>`
-    : `<div class="bubble" data-raw-content="${escapeHtml(msg.content || '')}">${renderMessageContent(msg)}<span class="msg-meta">${ts}${editedTag}${ticks}</span></div>`;
+    ? `<div class="media-content" data-raw-content="${escapeHtml(msg.content || '')}">${mediaSenderNameMarkup}${renderMessageContent(msg)}</div><span class="msg-time">${ts}${editedTag}${ticks}</span>`
+    : `<div class="bubble" data-raw-content="${escapeHtml(msg.content || '')}">${senderNameMarkup}${renderMessageContent(msg)}<span class="msg-meta">${ts}${editedTag}${ticks}</span></div>`;
   group.innerHTML = `${bom}${friendAvatarMarkup}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
   group.querySelectorAll('[data-poll-option]').forEach(btn => {
     btn.addEventListener('click', e => {
