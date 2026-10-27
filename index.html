@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/labx-watch.css">
+  <link rel="stylesheet" href="assets/labx-subjects.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{--ink:#eaf3ff;--muted:#91a3b9;--bg:#07111f;--panel:#0c1b2d;--line:rgba(187,220,255,.13);--cyan:#6ee7f9;--lime:#b7f36b;--orange:#ffb86b}
@@ -23,11 +24,11 @@
     <div class="grade-wrap"><button class="grade-chip" id="grade-lock" type="button" aria-label="السنة الدراسية المختارة"><i class="fa-solid fa-graduation-cap"></i><span><small>السنة الدراسية</small><strong id="grade-label">اختيار السنة</strong></span></button></div>
     <label class="searchbar"><i class="fa-solid fa-magnifying-glass"></i><input id="content-search" type="search" placeholder="ابحث عن فيديو أو ملف PDF" aria-label="ابحث في المحتوى"></label>
     <button class="brand" id="brand-logo" type="button" aria-label="Lab X"><span class="brand-name">Lab X</span><span class="brand-mark"><i class="fa-solid fa-flask"></i></span></button>
-  </header>
+    </header>
   <main class="shell">
     <section class="hero" id="hero"><div class="hero-copy"><div class="eyebrow">مساحة هادئة للتعلّم</div><h1>افهم فكرة جديدة، <em>كل يوم.</em></h1><p>متضيعش وقتك في البحث، كله في مكان واحد. اختار الفيديو أو الملف اللي محتاجه وابدأ رحلتك التعليمية.</p><div class="hero-buttons"><button class="primary" type="button" data-jump="videos">شاهد الفيديوهات <i class="fa-solid fa-arrow-left"></i></button><button class="secondary" type="button" data-jump="pdfs">افتح مكتبة PDF</button></div></div></section>
-    <section class="section" id="videos"><div class="section-head"><div><h2><i class="fa-solid fa-circle-play" style="color:var(--cyan);font-size:.9em"></i> الفيديوهات</h2><p>شروحات ودروس من مكتبة Lab X.</p></div><span class="section-count" id="video-count"></span></div><div class="video-grid" id="video-grid"><div class="empty"><i class="fa-solid fa-spinner fa-spin"></i>جارٍ تحميل الفيديوهات…</div></div></section>
-    <section class="section" id="pdfs"><div class="section-head"><div><h2><i class="fa-solid fa-book-open" style="color:var(--orange);font-size:.88em"></i> مكتبة PDF</h2><p>كتب ومذكرات ومراجع للقراءة أو التحميل.</p></div><span class="section-count" id="pdf-count"></span></div><div class="pdf-grid" id="pdf-grid"><div class="empty"><i class="fa-solid fa-spinner fa-spin"></i>جارٍ تحميل ملفات القراءة…</div></div></section>
+    <section class="section" id="videos"><div class="section-head"><div><h2><i class="fa-solid fa-circle-play" style="color:var(--cyan);font-size:.9em"></i> الفيديوهات</h2><p>شروحات ودروس من مكتبة Lab X.</p></div><span class="section-count" id="video-count"></span></div><div class="subject-filters" id="video-subject-filters" role="group" aria-label="اختيار مادة الفيديو"><button class="subject-filter active" type="button" data-subject-filter="all" aria-pressed="true">كل المواد</button><button class="subject-filter" type="button" data-subject-filter="arabic" aria-pressed="false">عربي</button><button class="subject-filter" type="button" data-subject-filter="social_studies" aria-pressed="false">دراسات</button></div><div class="video-grid" id="video-grid"><div class="empty"><i class="fa-solid fa-spinner fa-spin"></i>جارٍ تحميل الفيديوهات…</div></div></section>
+    <section class="section" id="pdfs"><div class="section-head"><div><h2><i class="fa-solid fa-book-open" style="color:var(--orange);font-size:.88em"></i> مكتبة PDF</h2><p>كتب ومذكرات ومراجع للقراءة أو التحميل.</p></div><span class="section-count" id="pdf-count"></span></div><div class="pdf-grid" id="pdf-grid"><div class="empty"><i class="fa-regular fa-file-pdf"></i>جارٍ تحميل ملفات القراءة…</div></div></section>
     <footer class="footer"><span>© 2026 Lab X</span><span>تعلّم بهدف.</span></footer>
   </main>
   <nav class="bottom-nav" aria-label="التنقل بين أقسام المكتبة"><button class="bottom-tab active" type="button" data-view="videos"><i class="fa-solid fa-circle-play"></i><span>الفيديوهات</span></button><button class="bottom-tab" type="button" data-view="pdfs"><i class="fa-solid fa-file-pdf"></i><span>ملفات PDF</span></button></nav>
@@ -40,7 +41,7 @@
       const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
       const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const videoGrid = document.getElementById('video-grid'), pdfGrid = document.getElementById('pdf-grid');
-      let allContent = [], activeView = 'videos', toastTimer = null, clicks = 0;
+      let allContent = [], activeView = 'videos', activeSubject = 'all', toastTimer = null, clicks = 0;
       function emptyCard(icon, text) { return `<div class="empty"><i class="${icon}"></i>${esc(text)}</div>`; }
       function youtubeVideoId(raw) {
         try {
@@ -129,14 +130,15 @@
         const query = document.getElementById('content-search').value.trim().toLowerCase();
         const matches = allContent.filter(row => !query || `${row.title || ''} ${row.description || ''}`.toLowerCase().includes(query));
         const videos = matches.filter(row => row.content_type === 'video'), pdfs = matches.filter(row => row.content_type === 'pdf');
-        document.getElementById('video-count').textContent = `${videos.length} فيديو`;
+        const visibleVideos = videos.filter(row => activeSubject === 'all' || (row.subject || 'arabic') === activeSubject);
+        document.getElementById('video-count').textContent = `${visibleVideos.length} فيديو`;
         document.getElementById('pdf-count').textContent = `${pdfs.length} ملف`;
-        videoGrid.innerHTML = videos.length ? videos.map(row => `<article class="video-card">${videoMarkup(row)}<div class="video-meta"><div class="video-icon"><i class="fa-solid fa-play"></i></div><div class="video-info"><h3>${esc(row.title)}</h3><p>${esc(row.description || 'فيديو تعليمي من Lab X')}</p><div class="video-date">${new Date(row.created_at).toLocaleDateString('ar-EG')}</div></div></div></article>`).join('') : emptyCard('fa-solid fa-video', query ? 'مفيش فيديوهات مطابقة للبحث.' : 'الفيديوهات الجديدة هتظهر هنا بعد نشرها.');
+        videoGrid.innerHTML = visibleVideos.length ? visibleVideos.map(row => `<article class="video-card">${videoMarkup(row)}<div class="video-meta"><div class="video-icon"><i class="fa-solid fa-play"></i></div><div class="video-info"><h3>${esc(row.title)}</h3><p>${esc(row.description || 'فيديو تعليمي من Lab X')}</p><div class="video-date">${new Date(row.created_at).toLocaleDateString('ar-EG')}</div></div></div></article>`).join('') : emptyCard('fa-solid fa-video', query ? 'مفيش فيديوهات مطابقة للبحث.' : activeSubject !== 'all' ? 'مفيش فيديوهات للمادة دي لسه.' : 'الفيديوهات الجديدة هتظهر هنا بعد نشرها.');
         pdfGrid.innerHTML = pdfs.length ? pdfs.map(row => `<article class="pdf-card"><div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div><div class="pdf-info"><h3>${esc(row.title)}</h3><p>${esc(row.description || 'مادة تعليمية بصيغة PDF')}</p></div><a class="pdf-open" href="${esc(row.public_url)}" target="_blank" rel="noopener noreferrer">فتح الملف <i class="fa-solid fa-arrow-up-right-from-square"></i></a></article>`).join('') : emptyCard('fa-regular fa-file-pdf', query ? 'مفيش ملفات مطابقة للبحث.' : 'الكتب والمذكرات هتظهر هنا بعد نشرها.');
       }
       async function loadContent() {
         if (!client) { videoGrid.innerHTML = emptyCard('fa-solid fa-triangle-exclamation', 'تعذر الاتصال بالمكتبة. حاول تحديث الصفحة.'); pdfGrid.innerHTML = ''; return; }
-        const { data, error } = await client.from('lab_x_content').select('id,title,description,content_type,public_url,created_at').order('created_at', { ascending: false }).limit(200);
+        const { data, error } = await client.from('lab_x_content').select('id,title,description,content_type,subject,public_url,created_at').order('created_at', { ascending: false }).limit(200);
         if (error) { console.error('Lab X content load failed:', error.message); videoGrid.innerHTML = emptyCard('fa-solid fa-triangle-exclamation', 'تعذر تحميل المكتبة. حاول تحديث الصفحة.'); pdfGrid.innerHTML = ''; return; }
         allContent = data || []; renderContent();
       }
@@ -170,6 +172,15 @@
       });
       document.getElementById('brand-logo').addEventListener('click', () => {});
       document.getElementById('content-search').addEventListener('input', renderContent);
+      document.querySelectorAll('[data-subject-filter]').forEach(button => button.addEventListener('click', () => {
+        activeSubject = button.dataset.subjectFilter;
+        document.querySelectorAll('[data-subject-filter]').forEach(filter => {
+          const selected = filter === button;
+          filter.classList.toggle('active', selected);
+          filter.setAttribute('aria-pressed', String(selected));
+        });
+        renderContent();
+      }));
       document.querySelectorAll('.bottom-tab').forEach(tab => tab.addEventListener('click', () => setView(tab.dataset.view, true)));
       document.querySelectorAll('[data-jump]').forEach(button => button.addEventListener('click', () => setView(button.dataset.jump, true)));
       document.addEventListener('copy', event => { if (!event.target.closest('input,textarea')) event.preventDefault(); });
