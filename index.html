@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/labx-watch.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{--ink:#eaf3ff;--muted:#91a3b9;--bg:#07111f;--panel:#0c1b2d;--line:rgba(187,220,255,.13);--cyan:#6ee7f9;--lime:#b7f36b;--orange:#ffb86b}
@@ -41,28 +42,89 @@
       const videoGrid = document.getElementById('video-grid'), pdfGrid = document.getElementById('pdf-grid');
       let allContent = [], activeView = 'videos', toastTimer = null, clicks = 0;
       function emptyCard(icon, text) { return `<div class="empty"><i class="${icon}"></i>${esc(text)}</div>`; }
-      function embedVideoUrl(raw) {
+      function youtubeVideoId(raw) {
         try {
-          const u = new URL(raw); if (u.protocol !== 'https:') return null;
+          const u = new URL(raw); if (u.protocol !== 'https:') return '';
           const host = u.hostname.toLowerCase().replace(/^www\./,'');
           let id = '';
           if (host === 'youtu.be') id = u.pathname.split('/').filter(Boolean)[0] || '';
           if (['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host)) id = u.searchParams.get('v') || (u.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/)?.[1] || '');
-          if (id && /^[\w-]{6,20}$/.test(id)) return `https://www.youtube-nocookie.com/embed/${id}?rel=0`;
+          return /^[\w-]{6,20}$/.test(id) ? id : '';
+        } catch (_) { return ''; }
+      }
+      function embedVideoUrl(raw) {
+        try {
+          const u = new URL(raw); if (u.protocol !== 'https:') return null;
+          const host = u.hostname.toLowerCase().replace(/^www\./,'');
+          const youtubeId = youtubeVideoId(raw);
+          if (youtubeId) return `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0`;
           if (host === 'vimeo.com' || host === 'player.vimeo.com') { const m=u.pathname.match(/\/(?:video\/)?(\d+)/); if(m)return `https://player.vimeo.com/video/${m[1]}`; }
           if (host === 'dai.ly' || host === 'dailymotion.com') { const m=u.pathname.match(/\/(?:video\/)?([\w]+)/); if(m)return `https://www.dailymotion.com/embed/video/${m[1]}`; }
           if (host === 'loom.com') { const m=u.pathname.match(/\/share\/([\w]+)/); if(m)return `https://www.loom.com/embed/${m[1]}`; }
           return null;
         } catch (_) { return null; }
       }
+      function isDirectVideoUrl(url) { return /^https:\/\//i.test(url) && /\.(mp4|webm|m4v|ogv)(?:$|[?#])/i.test(url); }
       function videoMarkup(row) {
         const url = String(row.public_url || '');
-        if (/^https:\/\//i.test(url) && /\.(mp4|webm|m4v|ogv)(?:$|[?#])/i.test(url)) return `<video class="video-frame" controls preload="metadata" playsinline src="${esc(url)}" aria-label="${esc(row.title)}"></video>`;
-        const embed = embedVideoUrl(url);
-        if (embed) return `<iframe class="video-embed" src="${esc(embed)}" title="${esc(row.title)}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+        if (isDirectVideoUrl(url) || embedVideoUrl(url)) {
+          const youtubeId = youtubeVideoId(url);
+          const thumbnail = youtubeId ? `<img src="https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg" alt="" loading="lazy">` : '';
+          const title = String(row.title || 'الفيديو');
+          return `<button type="button" class="video-preview" data-watch-video="${esc(row.id)}" aria-label="شاهد ${esc(title)} داخل Lab X">${thumbnail}<span class="video-preview-content"><span class="video-preview-play"><i class="fa-solid fa-play"></i></span><span class="video-preview-label">شاهد داخل Lab X</span></span></button>`;
+        }
         let safe = '#'; try { const u = new URL(url); if (u.protocol === 'https:') safe = u.href; } catch (_) {}
         return `<div class="video-link-frame"><i class="fa-solid fa-play"></i><strong>شاهد الفيديو على منصته</strong><a href="${esc(safe)}" target="_blank" rel="noopener noreferrer">فتح الفيديو <i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>`;
       }
+      let watchModal = null, watchPlayer = null, watchReturnFocus = null, watchPreviousOverflow = '';
+      function ensureWatchModal() {
+        if (watchModal) return watchModal;
+        watchModal = document.createElement('div');
+        watchModal.className = 'watch-modal';
+        watchModal.setAttribute('aria-hidden', 'true');
+        watchModal.innerHTML = `<div class="watch-dialog" role="dialog" aria-modal="true" aria-labelledby="watch-modal-title"><div class="watch-header"><div class="watch-heading"><h2 class="watch-title" id="watch-modal-title"></h2><p>المشاهدة داخل Lab X</p></div><button class="watch-close" type="button" aria-label="إغلاق المشاهدة"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-player"></div></div>`;
+        document.body.appendChild(watchModal);
+        watchPlayer = watchModal.querySelector('.watch-player');
+        watchModal.addEventListener('click', event => {
+          if (event.target === watchModal || event.target.closest('.watch-close')) closeWatchModal();
+        });
+        return watchModal;
+      }
+      function openWatchModal(row, opener) {
+        const url = String(row.public_url || '');
+        const direct = isDirectVideoUrl(url), embed = direct ? null : embedVideoUrl(url);
+        if (!direct && !embed) return;
+        ensureWatchModal();
+        watchReturnFocus = opener || document.activeElement;
+        watchPreviousOverflow = document.body.style.overflow;
+        watchModal.querySelector('.watch-title').textContent = String(row.title || 'مشاهدة فيديو');
+        if (direct) {
+          watchPlayer.innerHTML = `<video controls autoplay playsinline preload="auto" src="${esc(url)}" aria-label="${esc(row.title || 'الفيديو')}"></video>`;
+        } else {
+          const separator = embed.includes('?') ? '&' : '?';
+          const playerUrl = `${embed}${separator}autoplay=1&controls=1&playsinline=1`;
+          watchPlayer.innerHTML = `<iframe src="${esc(playerUrl)}" title="${esc(row.title || 'الفيديو')}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+        }
+        document.body.style.overflow = 'hidden';
+        watchModal.classList.add('show');
+        watchModal.setAttribute('aria-hidden', 'false');
+        watchModal.querySelector('.watch-close').focus();
+      }
+      function closeWatchModal() {
+        if (!watchModal || !watchModal.classList.contains('show')) return;
+        watchModal.classList.remove('show');
+        watchModal.setAttribute('aria-hidden', 'true');
+        watchPlayer.replaceChildren();
+        document.body.style.overflow = watchPreviousOverflow;
+        if (watchReturnFocus && typeof watchReturnFocus.focus === 'function') watchReturnFocus.focus();
+      }
+      videoGrid.addEventListener('click', event => {
+        const trigger = event.target.closest('[data-watch-video]');
+        if (!trigger) return;
+        const row = allContent.find(item => String(item.id) === trigger.dataset.watchVideo);
+        if (row) openWatchModal(row, trigger);
+      });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape') closeWatchModal(); });
       function renderContent() {
         const query = document.getElementById('content-search').value.trim().toLowerCase();
         const matches = allContent.filter(row => !query || `${row.title || ''} ${row.description || ''}`.toLowerCase().includes(query));
