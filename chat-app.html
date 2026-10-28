@@ -676,10 +676,6 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
   <div class="header">
     <h3 id="welcome-text">Private Chats</h3>
     <div style="display:flex;gap:10px;align-items:center;">
-      <button type="button" class="theme-btn" id="requests-btn" title="Chat Requests">
-        <i class="fa-solid fa-bell"></i>
-        <span id="req-badge" style="display:none;background:#ef4444;color:white;border-radius:50%;padding:1px 5px;font-size:9px;position:absolute;top:-5px;right:-8px;">0</span>
-      </button>
       <button type="button" class="theme-btn home-tools-btn" id="notifications-btn" title="Notifications"><i class="fa-solid fa-inbox"></i><span class="home-tools-badge" id="notifications-badge">0</span></button>
       <button type="button" class="theme-btn home-tools-btn" id="global-search-btn" title="Search all messages"><i class="fa-solid fa-magnifying-glass"></i></button>
       <button type="button" class="theme-btn theme-toggle-btn" title="Change Theme">
@@ -691,11 +687,11 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
     </div>
   </div>
   <div class="search-bar">
-    <input type="text" id="search-username" placeholder="Search user..." autocomplete="off">
-    <button type="button" id="start-chat-btn"><i class="fa-solid fa-user-plus"></i> <span>Send Request</span></button>
+    <input type="text" id="search-username" placeholder="Search approved accounts..." data-i18n-placeholder="home.search" autocomplete="off">
+    <button type="button" id="start-chat-btn"><i class="fa-solid fa-comment"></i> <span data-i18n="home.open_chat">Open Chat</span></button>
   </div>
   <div class="chat-list" id="chat-list">
-    <div class="empty-state"><i class="fa-regular fa-comments"></i><p>No chats yet. Search for a friend and send a request!</p></div>
+    <div class="empty-state"><i class="fa-regular fa-comments"></i><p>No approved accounts are available yet.</p></div>
   </div>
 </div>
 
@@ -1270,6 +1266,7 @@ const messagePollInFlight = new Set();
 let userStatusSubscription = null;
 let presenceChannel = null;
 let requestSubscription = null;
+let approvedDirectorySubscription = null;
 let pollVoteSubscription = null;
 let onlineUsers = new Set();
 let authStep = 'passcode';
@@ -1296,8 +1293,8 @@ const TRANSLATIONS = {
     'auth.error.banned':'Your account is banned!','auth.error.pending':'Account request pending approval!',
     'auth.error.db':'Failed to connect to database.','auth.error.unexpected':'Unexpected error: ',
     'auth.success.register':'Registration request sent successfully!',
-    'home.title':'Private Chats','home.search':'Search user...','home.send_request':'Send Request',
-    'home.no_chats':'No chats yet. Search for a friend and send a request!','home.requests':'Chat Requests',
+    'home.title':'Private Chats','home.search':'Search approved accounts...','home.open_chat':'Open Chat',
+    'home.no_chats':'No approved accounts are available yet.','home.requests':'Chat Requests',
     'home.no_requests':'No new requests','home.welcome':'Welcome, ',
     'chat.back':'Back','chat.call':'Call','chat.theme':'Change Theme','chat.offline':'Offline','chat.online':'Online now',
     'chat.typing':'Type a message...','chat.empty':'Start chatting with','chat.error.load':'Error loading messages',
@@ -1343,8 +1340,8 @@ const TRANSLATIONS = {
     'auth.error.banned':'حسابك محظور!','auth.error.pending':'حسابك قيد المراجعة!',
     'auth.error.db':'تعذر الاتصال.','auth.error.unexpected':'خطأ: ',
     'auth.success.register':'تم إرسال الطلب!',
-    'home.title':'المحادثات الخاصة','home.search':'ابحث...','home.send_request':'إرسال طلب',
-    'home.no_chats':'لا توجد محادثات.','home.requests':'الطلبات','home.no_requests':'لا طلبات جديدة','home.welcome':'مرحباً، ',
+    'home.title':'المحادثات الخاصة','home.search':'ابحث بين الحسابات المعتمدة...','home.open_chat':'افتح المحادثة',
+    'home.no_chats':'لا توجد حسابات معتمدة متاحة بعد.','home.requests':'الطلبات','home.no_requests':'لا طلبات جديدة','home.welcome':'مرحباً، ',
     'chat.back':'رجوع','chat.call':'مكالمة','chat.theme':'الثيم','chat.offline':'غير متصل','chat.online':'متصل',
     'chat.typing':'اكتب...','chat.empty':'ابدأ مع','chat.error.load':'خطأ في التحميل',
     'requests.title':'طلبات واردة','requests.accept':'قبول','requests.reject':'رفض',
@@ -1875,8 +1872,8 @@ async function completeApprovedLogin(data, uv, bindRes) {
   document.getElementById('welcome-text').innerText = t('home.welcome') + currentUser;
   authScreen.classList.remove('active');
   homeScreen.classList.add('active');
-  startUsageHeartbeat(); startOnlinePresence(); loadRecentChats(); loadIncomingRequests(); loadMyProfile();
-  setupAccountStatusListener(data.id); setupRequestSubscription(); startAutoLock();
+  startUsageHeartbeat(); startOnlinePresence(); setupApprovedDirectorySubscription(); loadRecentChats(); loadMyProfile();
+  setupAccountStatusListener(data.id); startAutoLock();
   if (bindRes?.justBound) setTimeout(() => toast('This device is now bound to your account', 'success', 4000), 800);
 }
 
@@ -1973,12 +1970,16 @@ function setupAccountStatusListener(aid) {
       }
     }).subscribe();
 }
-function setupRequestSubscription() {
+function setupApprovedDirectorySubscription() {
   const c = getSupabase(); if (!c || !currentUser) return;
-  if (requestSubscription) { c.removeChannel(requestSubscription); requestSubscription = null; }
-  requestSubscription = c.channel(`req_${currentUser}`).on('postgres_changes',
-    { event:'INSERT', schema:'public', table:'chat_requests', filter:`receiver=eq.${currentUser}` },
-    () => loadIncomingRequests()).subscribe();
+  if (approvedDirectorySubscription) { c.removeChannel(approvedDirectorySubscription); approvedDirectorySubscription = null; }
+  approvedDirectorySubscription = c.channel(`approved_directory_${currentUser}`)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'approved_user_directory' }, p => {
+      const username = String(p.new?.username || '');
+      if (username && username.toLowerCase() !== String(currentUser).toLowerCase()) loadRecentChats();
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'approved_user_directory' }, () => loadRecentChats())
+    .subscribe(status => { if (status === 'SUBSCRIBED') loadRecentChats(); });
 }
 function startUsageHeartbeat() {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
@@ -2058,6 +2059,7 @@ function lockAppNow() {
     if (messageSubscription && c) { c.removeChannel(messageSubscription); messageSubscription = null; }
     if (pollVoteSubscription && c) { c.removeChannel(pollVoteSubscription); pollVoteSubscription = null; }
     if (presenceChannel && c) { c.removeChannel(presenceChannel); presenceChannel = null; }
+    if (approvedDirectorySubscription && c) { c.removeChannel(approvedDirectorySubscription); approvedDirectorySubscription = null; }
   } catch(e){}
   try {
     chatScreen.classList.remove('active');
@@ -2359,12 +2361,12 @@ async function logout() {
     }
   } catch(e){}
   currentPassword = '';
-  [messageSubscription, userStatusSubscription, requestSubscription, pollVoteSubscription].forEach(s => {
+  [messageSubscription, userStatusSubscription, requestSubscription, approvedDirectorySubscription, pollVoteSubscription].forEach(s => {
     if (s && c) { try { c.removeChannel(s); } catch(e){} }
   });
   if (presenceChannel && c) { try { await c.removeChannel(presenceChannel); } catch(e){} }
   if (heartbeatInterval) clearInterval(heartbeatInterval);
-  messageSubscription = userStatusSubscription = requestSubscription = pollVoteSubscription = presenceChannel = null;
+  messageSubscription = userStatusSubscription = requestSubscription = approvedDirectorySubscription = pollVoteSubscription = presenceChannel = null;
   currentUser = ''; currentAccountData = null; currentChatFriend = '';
   unreadCounts = {}; msgCache.clear();
   closeSettings(); closeRequestsModal();
@@ -2716,11 +2718,16 @@ async function loadRecentChats() {
   // Mazen is the default contact: new users see this chat immediately
   // without sending a separate chat request or searching for the username.
   if (String(currentUser).toLowerCase() !== 'mazen') friends.add('Mazen');
-  const { data: reqs } = await c.from('chat_requests').select('*').eq('status','accepted').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`);
-  if (reqs) reqs.forEach(r => {
-    if (r.sender !== currentUser) friends.add(r.sender);
-    if (r.receiver !== currentUser) friends.add(r.receiver);
-  });
+  const directoryPageSize = 500;
+  for (let offset = 0; ; offset += directoryPageSize) {
+    const { data: approvedUsers, error: directoryError } = await c.from('approved_user_directory')
+      .select('username').order('username').range(offset, offset + directoryPageSize - 1);
+    if (directoryError) { console.error('Approved-user directory could not be loaded:', directoryError); break; }
+    (approvedUsers || []).forEach(row => {
+      if (row.username && row.username.toLowerCase() !== String(currentUser).toLowerCase()) friends.add(row.username);
+    });
+    if (!approvedUsers || approvedUsers.length < directoryPageSize) break;
+  }
   const { data: msgs } = await c.from('private_messages').select('sender,receiver').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`);
   if (msgs) msgs.forEach(m => {
     if (m.sender !== currentUser) friends.add(m.sender);
@@ -2829,24 +2836,12 @@ async function startNewChat() {
   const si = document.getElementById('search-username');
   const fn = si.value.trim();
   if (!fn) { toast(t('home.enter_user'), 'error'); return; }
-  if (fn === currentUser) { toast(t('search.self'), 'error'); return; }
+  if (fn.toLowerCase() === String(currentUser).toLowerCase()) { toast(t('search.self'), 'error'); return; }
   const c = getSupabase(); if (!c) return;
-  const { data: isApproved, error: ue } = await c.rpc('username_is_approved', { p_username: fn });
-  if (ue || !isApproved) { toast(t('search.not_found'), 'error'); return; }
-  const { data: er } = await c.from('chat_requests').select('*').or(`and(sender.eq.${currentUser},receiver.eq.${fn}),and(sender.eq.${fn},receiver.eq.${currentUser})`).maybeSingle();
-  if (er) {
-    if (er.status === 'accepted') { si.value = ''; openChat(fn); return; }
-    if (er.status === 'pending') { toast(t('requests.pending')); return; }
-    if (er.status === 'rejected') {
-      await c.from('chat_requests').update({ status:'pending', sender:currentUser, receiver:fn }).eq('id', er.id);
-      toast(t('requests.sent'), 'success');
-      si.value = '';
-      return;
-    }
-  }
-  const { error: ie } = await c.from('chat_requests').insert([{ sender: currentUser, receiver: fn, status: 'pending' }]);
-  if (ie) toast('Error: ' + ie.message, 'error');
-  else { toast(t('requests.sent'), 'success'); si.value = ''; }
+  const { data: approvedAccount, error } = await c.from('approved_user_directory').select('username').eq('username', fn).maybeSingle();
+  if (error || !approvedAccount) { toast(t('search.not_found'), 'error'); return; }
+  si.value = '';
+  openChat(approvedAccount.username);
 }
 
 // ═══════ Open Chat ═══════
