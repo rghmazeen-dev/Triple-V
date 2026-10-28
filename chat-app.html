@@ -602,8 +602,8 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 :root[data-theme="ig2"] .chat-user-status { color:#cdd3ff; }
 :root[data-theme="ig2"] .chat-box { background:rgba(5,8,42,.34); background-image:linear-gradient(rgba(5,8,42,.12),rgba(5,8,42,.28)); background-blend-mode:soft-light; padding-inline:16px; gap:8px; }
 :root[data-theme="ig2"] .msg-group { max-width:min(82%,560px); }
-:root[data-theme="ig2"] .msg-group.me { align-self:flex-start; padding-left:0; padding-right:42px; }
-:root[data-theme="ig2"] .msg-group.other { align-self:flex-end; padding-right:0; padding-left:32px; }
+:root[data-theme="ig2"] .msg-group.me { align-self:flex-start; padding-left:0; padding-right:0; }
+:root[data-theme="ig2"] .msg-group.other { align-self:flex-end; padding-right:0; padding-left:0; }
 :root[data-theme="ig2"] .msg-group.me .bubble { background:var(--msg-me-bg); border:1px solid rgba(214,241,255,.24); border-radius:24px 24px 6px 24px; box-shadow:var(--msg-me-shadow); }
 :root[data-theme="ig2"] .msg-group.other .bubble { background:var(--msg-other-bg); border:1px solid rgba(151,165,255,.16); border-radius:24px 24px 24px 6px; box-shadow:0 8px 22px rgba(5,5,44,.3); color:#eef0ff; }
 :root[data-theme="ig2"] .msg-group .msg-time { color:#d8dcff; }
@@ -1263,6 +1263,10 @@ let avatarUploadActive = false;
 let currentChatFriend = '';
 let heartbeatInterval = null;
 let messageSubscription = null;
+let messagePollTimer = null;
+let messageLoadSequence = 0;
+let latestMessageAt = null;
+const messagePollInFlight = new Set();
 let userStatusSubscription = null;
 let presenceChannel = null;
 let requestSubscription = null;
@@ -2037,6 +2041,10 @@ function resetAutoLockTimer() {
   }, lockSeconds * 1000);
 }
 function lockAppNow() {
+  if (messagePollTimer) clearInterval(messagePollTimer);
+  messagePollTimer = null;
+  messageLoadSequence++;
+  latestMessageAt = null;
   try { closeSettings(); } catch(e){}
   try { closeRequestsModal(); } catch(e){}
   try { closeMsgActions(); } catch(e){}
@@ -2847,6 +2855,10 @@ async function openChat(fn) {
     const ok = await promptChatPin(fn);
     if (!ok) return;
   }
+  const loadToken = ++messageLoadSequence;
+  if (messagePollTimer) clearInterval(messagePollTimer);
+  messagePollTimer = null;
+  latestMessageAt = null;
   currentChatFriend = fn;
   markSeen(fn);
   clearReply();
@@ -2900,6 +2912,8 @@ async function openChat(fn) {
   // last messages. The user can focus the composer normally by tapping it.
   const c = getSupabase(); if (!c) return;
   const { data, error } = await c.from('private_messages').select('*').or(pairFilter(fn)).order('created_at', { ascending: false }).limit(PAGE_SIZE);
+  if (loadToken !== messageLoadSequence || currentChatFriend !== fn) return;
+  latestMessageAt = data && data.length ? data[0].created_at : new Date(Date.now() - 10000).toISOString();
   if (error) {
     console.error(error);
     chatBox.innerHTML = `<div style="text-align:center;color:#ff4d4d;margin-top:20px;">${t('chat.error.load')}</div>`;
@@ -2922,9 +2936,13 @@ async function openChat(fn) {
   messageSubscription = c.channel(`chat_${currentUser}_${fn}`)
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`sender=eq.${fn}` }, p => handleIncomingMessage(p.new))
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${fn}` }, p => handleUpdatedMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
     .subscribe(status => updateConnBanner(status));
+
+  messagePollTimer = setInterval(() => pollConversationMessages(fn, loadToken), 2500);
 
   if (pollVoteSubscription) c.removeChannel(pollVoteSubscription);
   pollVoteSubscription = c.channel(`pv_${currentUser}_${fn}`).on('postgres_changes',
@@ -2939,26 +2957,65 @@ async function openChat(fn) {
 }
 
 function handleIncomingMessage(m) {
-  if (!m || m.sender === currentUser) return;
-  recordLastSeen(m.sender, new Date(m.created_at).getTime() || Date.now());
-  const friend = m.sender;
-  if (m.receiver !== currentUser) return;
+  if (!m) return;
+  const isMine = m.sender === currentUser;
+  const friend = isMine ? m.receiver : m.sender;
+  if (!friend || (isMine ? m.sender !== currentUser : m.receiver !== currentUser)) return;
+  if (!isMine) recordLastSeen(friend, new Date(m.created_at).getTime() || Date.now());
+  const createdAt = Date.parse(m.created_at || '');
+  if (Number.isFinite(createdAt) && (!latestMessageAt || createdAt > Date.parse(latestMessageAt))) latestMessageAt = m.created_at;
   if (friend === currentChatFriend && chatScreen.classList.contains('active')) {
     if (chatBox.querySelector(`[data-message-id="${CSS.escape(String(m.id))}"]`)) return;
     const ph = chatBox.querySelector('.empty-chat-message');
     if (ph) ph.remove();
     addMessageToScreen(m);
-    upgradeReceipts('read');
-    playReceiveSound();
+    if (!isMine) {
+      upgradeReceipts('read');
+      playReceiveSound();
+    }
     if (isNearBottom()) {
       scrollToBottom(true);
       setTimeout(() => scrollToBottom(false), 400);
     } else updateScrollFab();
-  } else {
+  } else if (!isMine) {
     unreadCounts[friend] = (unreadCounts[friend] || 0) + 1;
     updateFriendBadge(friend);
     pushNotification(`New message from ${friend}`, getMessagePayload(m).text || 'New message', 'fa-comment');
     playNotifySound();
+  }
+}
+
+async function pollConversationMessages(friend, loadToken) {
+  if (!currentUser || !friend || currentChatFriend !== friend || !chatScreen.classList.contains('active') || document.visibilityState !== 'visible') return;
+  if (messagePollInFlight.has(friend)) return;
+  const c = getSupabase();
+  if (!c) return;
+  messagePollInFlight.add(friend);
+  const latestMs = latestMessageAt ? Date.parse(latestMessageAt) : NaN;
+  const since = new Date((Number.isFinite(latestMs) ? latestMs : Date.now()) - 5000).toISOString();
+  try {
+    const { data, error } = await c.from('private_messages')
+      .select('id,sender,receiver,content,created_at')
+      .or(pairFilter(friend))
+      .gte('created_at', since)
+      .order('created_at', { ascending: true })
+      .limit(100);
+    if (error) throw error;
+    if (loadToken !== messageLoadSequence || currentChatFriend !== friend || !chatScreen.classList.contains('active')) return;
+    (data || []).forEach(message => {
+      const createdAt = Date.parse(message.created_at || '');
+      if (Number.isFinite(createdAt) && (!latestMessageAt || createdAt > Date.parse(latestMessageAt))) latestMessageAt = message.created_at;
+      const exists = chatBox.querySelector(`[data-message-id="${CSS.escape(String(message.id))}"]`);
+      if (!exists && ((message.sender === currentUser && message.receiver === friend) || (message.sender === friend && message.receiver === currentUser))) {
+        handleIncomingMessage(message);
+      }
+    });
+    updateConnBanner(null);
+  } catch (e) {
+    if (document.visibilityState === 'visible') updateConnBanner('CHANNEL_ERROR');
+    console.warn('Conversation sync fallback failed:', e);
+  } finally {
+    messagePollInFlight.delete(friend);
   }
 }
 
@@ -3047,14 +3104,12 @@ function buildMessageGroup(msg) {
   const ts = new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   const ticks = isMe ? `<span class="read-receipts ${receiptClassFor()}"><i class="fa-solid fa-check"></i><i class="fa-solid fa-check"></i></span>` : '';
   const editedTag = payload.editedAt ? `<span class="edited-badge">${t('msg.edited')}</span>` : '';
-  const friendAvatar = !isMe ? document.querySelector('#chat-avatar .avatar-img')?.getAttribute('src') : '';
-  const friendAvatarMarkup = !isMe ? `<div class="ig2-message-avatar">${friendAvatar ? `<img src="${escapeHtml(friendAvatar)}" alt="">` : escapeHtml((currentChatFriend || 'U').charAt(0).toUpperCase())}</div>` : '';
   const senderNameMarkup = !isMe ? `<div class="message-sender-name">${escapeHtml(currentChatFriend || 'User')}</div>` : '';
   const mediaSenderNameMarkup = !isMe ? `<div class="message-sender-name media-sender-name">${escapeHtml(currentChatFriend || 'User')}</div>` : '';
   const bom = isMedia
     ? `<div class="media-content" data-raw-content="${escapeHtml(msg.content || '')}">${mediaSenderNameMarkup}${renderMessageContent(msg)}</div><span class="msg-time">${ts}${editedTag}${ticks}</span>`
     : `<div class="bubble" data-raw-content="${escapeHtml(msg.content || '')}">${senderNameMarkup}${renderMessageContent(msg)}<span class="msg-meta">${ts}${editedTag}${ticks}</span></div>`;
-  group.innerHTML = `${bom}${friendAvatarMarkup}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
+  group.innerHTML = `${bom}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
   group.querySelectorAll('[data-poll-option]').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault(); e.stopPropagation();
@@ -4669,22 +4724,43 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ═══════ Session privacy on leave ═══════
-// Returning from another tab/app starts at Pass code, except during profile photo selection and upload.
+// Leaving the chat page returns the tab to Lab X; keep the picker exception so profile uploads can finish.
+let labReturnPending = false;
+function returnToLabX() {
+  labReturnPending = true;
+  if (currentUser) {
+    try { lockAppNow(); } catch (e) { console.error('Session lock failed:', e); }
+  }
+  const labUrl = new URL('./index.html', window.location.href);
+  if (window.location.pathname !== labUrl.pathname) window.location.replace(labUrl.href);
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && avatarPickerActive) {
     avatarPickerWasHidden = true;
   } else if (document.visibilityState === 'visible' && avatarPickerActive && avatarPickerWasHidden) {
     finishAvatarPicker();
-  } else if (document.visibilityState === 'hidden' && currentUser && !avatarPickerActive && !avatarUploadActive) {
-    try { lockAppNow(); } catch (e) { console.error('Session lock failed:', e); }
+  } else if (document.visibilityState === 'hidden' && !avatarPickerActive && !avatarUploadActive) {
+    returnToLabX();
+  } else if (document.visibilityState === 'visible' && labReturnPending && !avatarPickerActive && !avatarUploadActive) {
+    returnToLabX();
   }
 }, { passive:true });
 
-// Leaving the browser/app must never restore an authenticated chat from bfcache.
-window.addEventListener('pagehide', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive) { try { lockAppNow(); } catch(e) {} } }, { passive:true });
+// Leaving the browser/app must never restore the chat from bfcache.
+window.addEventListener('pagehide', () => {
+  if (!avatarPickerActive && !avatarUploadActive) {
+    labReturnPending = true;
+    if (currentUser) { try { lockAppNow(); } catch(e) {} }
+  }
+}, { passive:true });
 window.addEventListener('beforeunload', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive) { try { lockAppNow(); } catch(e) {} } });
+window.addEventListener('pageshow', event => {
+  if ((event.persisted || labReturnPending) && !avatarPickerActive && !avatarUploadActive) returnToLabX();
+}, { passive:true });
 window.addEventListener('focus', () => {
   if (avatarPickerActive && avatarPickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishAvatarPicker, 150);
+  else if (labReturnPending && document.visibilityState !== 'hidden' && !avatarUploadActive) returnToLabX();
 }, { passive:true });
 
 // ═══════ Render Font Options ═══════

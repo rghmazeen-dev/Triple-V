@@ -30,7 +30,7 @@
     <section class="section" id="videos"><div class="section-head"><div><h2><i class="fa-solid fa-circle-play" style="color:var(--cyan);font-size:.9em"></i> الفيديوهات</h2><p>شروحات ودروس من مكتبة Lab X.</p></div><span class="section-count" id="video-count"></span></div><div class="subject-filters" id="video-subject-filters" role="group" aria-label="اختيار مادة الفيديو"><button class="subject-filter active" type="button" data-subject-filter="all" aria-pressed="true">كل المواد</button><button class="subject-filter" type="button" data-subject-filter="arabic" aria-pressed="false">عربي</button><button class="subject-filter" type="button" data-subject-filter="social_studies" aria-pressed="false">دراسات</button></div><div class="video-grid" id="video-grid"><div class="empty"><i class="fa-solid fa-spinner fa-spin"></i>جارٍ تحميل الفيديوهات…</div></div></section>
     <footer class="footer"><span>© 2026 Lab X</span><span>تعلّم بهدف.</span></footer>
   </main>
-  <div class="modal" id="year-modal" role="dialog" aria-modal="true" aria-labelledby="year-title"><div class="year-dialog"><h2 id="year-title">أنت في سنة كام؟</h2><p>اختار سنتك الدراسية عشان نعرض لك المحتوى المناسب. بعد الاختيار مش هتقدر تغيّرها من الموقع.</p><div class="year-options"><button class="year-option" type="button" data-year="الصف الثالث الإعدادي"><span><strong>الصف الثالث الإعدادي</strong><small>اختيار السنة الدراسية</small></span><i class="fa-solid fa-arrow-left"></i></button><button class="year-option" type="button" data-year="الصف الثاني الإعدادي"><span><strong>الصف الثاني الإعدادي</strong><small>اختيار السنة الدراسية</small></span><i class="fa-solid fa-arrow-left"></i></button><button class="year-option" type="button" disabled aria-disabled="true"><span><strong>أولى ثانوي / بكالوريا</strong><small>المحتوى الخاص بها قادم لاحقًا</small></span><span class="soon">SOON</span></button></div><div class="year-footnote">اختيار السنة يُحفظ على هذا الجهاز. لو اخترت سنة بالخطأ، تواصل مع إدارة الموقع.</div></div></div>
+  <div class="modal" id="year-modal" role="dialog" aria-modal="true" aria-labelledby="year-title"><div class="year-dialog"><h2 id="year-title">أنت في سنة كام؟</h2><p>الصف الثالث الإعدادي هو المتاح حاليًا. باقي الصفوف هتكون متاحة قريبًا.</p><div class="year-options"><button class="year-option" type="button" data-year="الصف الثالث الإعدادي"><span><strong>الصف الثالث الإعدادي</strong><small>متاح الآن</small></span><i class="fa-solid fa-arrow-left"></i></button><button class="year-option" type="button" disabled aria-disabled="true"><span><strong>الصف الثاني الإعدادي</strong><small>المحتوى الخاص به قادم لاحقًا</small></span><span class="soon">SOON</span></button><button class="year-option" type="button" disabled aria-disabled="true"><span><strong>أولى ثانوي / بكالوريا</strong><small>المحتوى الخاص بها قادم لاحقًا</small></span><span class="soon">SOON</span></button></div><div class="year-footnote">اختيار السنة يُحفظ على هذا الجهاز. لو اخترت سنة بالخطأ، تواصل مع إدارة الموقع.</div></div></div>
   <div class="toast" id="site-toast" role="status" aria-live="polite"></div>
   <script>
     (() => {
@@ -146,10 +146,10 @@
       function initYear() {
         const year = localStorage.getItem('labx_school_year');
         const modal = document.getElementById('year-modal');
-        if (year === 'الصف الثاني الإعدادي' || year === 'الصف الثالث الإعدادي') document.getElementById('grade-label').textContent = year;
+        if (year === 'الصف الثالث الإعدادي') document.getElementById('grade-label').textContent = year;
         else { modal.classList.add('show'); }
         document.querySelectorAll('[data-year]').forEach(button => button.addEventListener('click', () => {
-          const selected = button.dataset.year; if (!selected) return;
+          const selected = button.dataset.year; if (button.disabled || selected !== 'الصف الثالث الإعدادي') return;
           localStorage.setItem('labx_school_year', selected);
           document.getElementById('grade-label').textContent = selected;
           modal.classList.remove('show'); showToast(`تم اختيار ${selected}`);
