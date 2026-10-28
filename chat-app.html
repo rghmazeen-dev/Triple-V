@@ -2934,10 +2934,11 @@ async function openChat(fn) {
 
   if (messageSubscription) c.removeChannel(messageSubscription);
   messageSubscription = c.channel(`chat_${currentUser}_${fn}`)
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`sender=eq.${fn}` }, p => handleIncomingMessage(p.new))
+    // Each side of the current account's conversation gets one precise filter.
+    // `receiver=currentUser` receives peer messages; `sender=currentUser` keeps
+    // the sender's own message state in sync without a redundant peer filter.
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
-    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${fn}` }, p => handleUpdatedMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
     .subscribe(status => {
