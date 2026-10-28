@@ -2940,9 +2940,12 @@ async function openChat(fn) {
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${fn}` }, p => handleUpdatedMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
-    .subscribe(status => updateConnBanner(status));
+    .subscribe(status => {
+      updateConnBanner(status);
+      if (status === 'SUBSCRIBED') pollConversationMessages(fn, loadToken);
+    });
 
-  messagePollTimer = setInterval(() => pollConversationMessages(fn, loadToken), 2500);
+  messagePollTimer = setInterval(() => pollConversationMessages(fn, loadToken), 1500);
 
   if (pollVoteSubscription) c.removeChannel(pollVoteSubscription);
   pollVoteSubscription = c.channel(`pv_${currentUser}_${fn}`).on('postgres_changes',
@@ -2991,18 +2994,15 @@ async function pollConversationMessages(friend, loadToken) {
   const c = getSupabase();
   if (!c) return;
   messagePollInFlight.add(friend);
-  const latestMs = latestMessageAt ? Date.parse(latestMessageAt) : NaN;
-  const since = new Date((Number.isFinite(latestMs) ? latestMs : Date.now()) - 5000).toISOString();
   try {
     const { data, error } = await c.from('private_messages')
-      .select('id,sender,receiver,content,created_at')
+      .select('*')
       .or(pairFilter(friend))
-      .gte('created_at', since)
-      .order('created_at', { ascending: true })
-      .limit(100);
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE);
     if (error) throw error;
     if (loadToken !== messageLoadSequence || currentChatFriend !== friend || !chatScreen.classList.contains('active')) return;
-    (data || []).forEach(message => {
+    (data || []).slice().reverse().forEach(message => {
       const createdAt = Date.parse(message.created_at || '');
       if (Number.isFinite(createdAt) && (!latestMessageAt || createdAt > Date.parse(latestMessageAt))) latestMessageAt = message.created_at;
       const exists = chatBox.querySelector(`[data-message-id="${CSS.escape(String(message.id))}"]`);
@@ -3486,6 +3486,9 @@ function updateConnBanner(status) {
 }
 window.addEventListener('online', () => updateConnBanner(null));
 window.addEventListener('offline', () => updateConnBanner(null));
+window.addEventListener('online', () => {
+  if (currentChatFriend && chatScreen.classList.contains('active')) pollConversationMessages(currentChatFriend, messageLoadSequence);
+});
 </script>
 <script>
 'use strict';
