@@ -2991,18 +2991,23 @@ async function pollConversationMessages(friend, loadToken) {
   if (!c) return;
   messagePollInFlight.add(friend);
   try {
-    const { data, error } = await c.from('private_messages')
-      .select('*')
-      .or(pairFilter(friend))
-      .order('created_at', { ascending: false })
-      .limit(PAGE_SIZE);
-    if (error) throw error;
+    const [sentResult, receivedResult] = await Promise.all([
+      c.from('private_messages').select('*').eq('sender', currentUser).eq('receiver', friend).order('created_at', { ascending: false }).limit(PAGE_SIZE),
+      c.from('private_messages').select('*').eq('sender', friend).eq('receiver', currentUser).order('created_at', { ascending: false }).limit(PAGE_SIZE)
+    ]);
+    if (sentResult.error) throw sentResult.error;
+    if (receivedResult.error) throw receivedResult.error;
+    const data = [...(sentResult.data || []), ...(receivedResult.data || [])]
+      .sort((a, b) => Date.parse(a.created_at || '') - Date.parse(b.created_at || ''))
+      .slice(-PAGE_SIZE);
     if (loadToken !== messageLoadSequence || currentChatFriend !== friend || !chatScreen.classList.contains('active')) return;
     (data || []).slice().reverse().forEach(message => {
       const createdAt = Date.parse(message.created_at || '');
       if (Number.isFinite(createdAt) && (!latestMessageAt || createdAt > Date.parse(latestMessageAt))) latestMessageAt = message.created_at;
       const exists = chatBox.querySelector(`[data-message-id="${CSS.escape(String(message.id))}"]`);
-      if (!exists && ((message.sender === currentUser && message.receiver === friend) || (message.sender === friend && message.receiver === currentUser))) {
+      if (exists) {
+        handleUpdatedMessage(message);
+      } else if ((message.sender === currentUser && message.receiver === friend) || (message.sender === friend && message.receiver === currentUser)) {
         handleIncomingMessage(message);
       }
     });
