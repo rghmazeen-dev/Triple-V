@@ -2991,13 +2991,29 @@ async function pollConversationMessages(friend, loadToken) {
   if (!c) return;
   messagePollInFlight.add(friend);
   try {
-    const [sentResult, receivedResult] = await Promise.all([
-      c.from('private_messages').select('*').eq('sender', currentUser).eq('receiver', friend).order('created_at', { ascending: false }).limit(PAGE_SIZE),
-      c.from('private_messages').select('*').eq('sender', friend).eq('receiver', currentUser).order('created_at', { ascending: false }).limit(PAGE_SIZE)
+    const restRows = async (sender, receiver) => {
+      const params = new URLSearchParams({
+        select: '*',
+        sender: `eq.${sender}`,
+        receiver: `eq.${receiver}`,
+        order: 'created_at.desc',
+        limit: String(PAGE_SIZE)
+      });
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/private_messages?${params.toString()}`, {
+        method: 'GET', cache: 'no-store', headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+      if (!response.ok) throw new Error(`Message sync HTTP ${response.status}`);
+      return response.json();
+    };
+    const [sentRows, receivedRows] = await Promise.all([
+      restRows(currentUser, friend),
+      restRows(friend, currentUser)
     ]);
-    if (sentResult.error) throw sentResult.error;
-    if (receivedResult.error) throw receivedResult.error;
-    const data = [...(sentResult.data || []), ...(receivedResult.data || [])]
+    const data = [...(sentRows || []), ...(receivedRows || [])]
       .sort((a, b) => Date.parse(a.created_at || '') - Date.parse(b.created_at || ''))
       .slice(-PAGE_SIZE);
     if (loadToken !== messageLoadSequence || currentChatFriend !== friend || !chatScreen.classList.contains('active')) return;
