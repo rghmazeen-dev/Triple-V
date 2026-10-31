@@ -135,7 +135,7 @@ button,input,textarea { font:inherit; }
 .secondary-link { color:var(--text-muted); margin-top:15px; cursor:pointer; font-size:.85rem; text-decoration:underline; }
 .error-msg { color:#ff4d4d; background:rgba(255,77,77,.1); border:1px solid rgba(255,77,77,.3); padding:10px; border-radius:12px; font-size:.85rem; width:100%; max-width:380px; margin-bottom:15px; display:none; text-align:center; word-break:break-word; }
 .labx-login-note { display:none; width:min(390px,calc(100vw - 34px)); margin:0 auto 14px; padding:11px 13px; border:1px solid rgba(110,231,249,.35); border-radius:13px; background:rgba(15,38,58,.82); color:#d9f8ff; font-size:.78rem; line-height:1.7; text-align:right; direction:rtl; }
-.labx-login-note.show { display:block; }
+.labx-login-note.show { display:block; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:30; max-height:30vh; overflow:auto; box-shadow:0 10px 30px rgba(0,0,0,.35); }
 #auth-screen .miss-minutes-welcome[hidden] { display:none !important; }
 #auth-screen .miss-minutes-welcome { position:absolute; inset:0; z-index:15; display:block; width:100%; height:100%; margin:0; pointer-events:none; overflow:hidden; }
 #auth-screen .miss-minutes-actor { --mm-bottom-gap:170px; position:absolute; left:50%; top:6%; width:min(330px,calc(100vw - 16px)); height:154px; display:flex; align-items:center; justify-content:center; gap:4px; transform:translateX(-50%); will-change:left,top,transform; }
