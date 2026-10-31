@@ -1875,6 +1875,7 @@ async function completeApprovedLogin(data, uv, bindRes) {
   }
   currentUser = uv;
   currentAccountData = data;
+  if (labxLoginNote) labxLoginNote.classList.remove('show');
   document.getElementById('welcome-text').innerText = t('home.welcome') + currentUser;
   authScreen.classList.remove('active');
   homeScreen.classList.add('active');
