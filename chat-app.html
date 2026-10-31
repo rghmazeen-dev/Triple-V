@@ -1119,20 +1119,23 @@ async function loginAccountRpc(username, password) {
 let securityQuestionsEnabled = false;
 let securityQuestionsPollTimer = null;
 let securityQuestionOverlay = null;
+let securityQuestionSettingKnown = false;
+let securityQuestionSettingReady = Promise.resolve(false);
 async function refreshSecurityQuestionSetting() {
   const c = getSupabase();
-  if (!c) { setSecurityQuestionLayer(false); return false; }
+  if (!c) { if (!securityQuestionSettingKnown) setSecurityQuestionLayer(false); return securityQuestionsEnabled; }
   try {
-    const { data, error } = await c.from('app_security_settings')
-      .select('questions_enabled').eq('id', true).maybeSingle();
-    if (error || !data) { setSecurityQuestionLayer(false); return false; }
+    const { data, error } = await withTimeout(c.from('app_security_settings')
+      .select('questions_enabled').eq('id', true).maybeSingle(), 6000);
+    if (error || !data) return securityQuestionsEnabled;
+    securityQuestionSettingKnown = true;
     setSecurityQuestionLayer(!!data.questions_enabled);
     return securityQuestionsEnabled;
-  } catch (_) { setSecurityQuestionLayer(false); return false; }
+  } catch (_) { return securityQuestionsEnabled; }
 }
 function startSecurityQuestionSettingWatch() {
   if (securityQuestionsPollTimer) clearInterval(securityQuestionsPollTimer);
-  refreshSecurityQuestionSetting();
+  securityQuestionSettingReady = refreshSecurityQuestionSetting();
   securityQuestionsPollTimer = setInterval(refreshSecurityQuestionSetting, 1800);
 }
 
@@ -1932,6 +1935,7 @@ async function handleAuthAction() {
         return;
       }
 
+      await securityQuestionSettingReady;
       const gate = await beginSecurityChallenge(client, uv, pvHash);
       if (gate.error) { showError('تعذر تحميل التحقق الأمني. حاول مرة أخرى لاحقًا.'); authBtn.disabled = false; authBtn.style.opacity = '1'; return; }
       if (gate.required) {
