@@ -134,6 +134,8 @@ button,input,textarea { font:inherit; }
 .primary-btn:active { transform:scale(.98); }
 .secondary-link { color:var(--text-muted); margin-top:15px; cursor:pointer; font-size:.85rem; text-decoration:underline; }
 .error-msg { color:#ff4d4d; background:rgba(255,77,77,.1); border:1px solid rgba(255,77,77,.3); padding:10px; border-radius:12px; font-size:.85rem; width:100%; max-width:380px; margin-bottom:15px; display:none; text-align:center; word-break:break-word; }
+.labx-login-note { display:none; width:min(390px,calc(100vw - 34px)); margin:0 auto 14px; padding:11px 13px; border:1px solid rgba(110,231,249,.35); border-radius:13px; background:rgba(15,38,58,.82); color:#d9f8ff; font-size:.78rem; line-height:1.7; text-align:right; direction:rtl; }
+.labx-login-note.show { display:block; }
 #auth-screen .miss-minutes-welcome[hidden] { display:none !important; }
 #auth-screen .miss-minutes-welcome { position:absolute; inset:0; z-index:15; display:block; width:100%; height:100%; margin:0; pointer-events:none; overflow:hidden; }
 #auth-screen .miss-minutes-actor { --mm-bottom-gap:170px; position:absolute; left:50%; top:6%; width:min(330px,calc(100vw - 16px)); height:154px; display:flex; align-items:center; justify-content:center; gap:4px; transform:translateX(-50%); will-change:left,top,transform; }
@@ -655,6 +657,7 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
     <i class="fa-solid fa-lock" id="auth-icon"></i>
     <h2 id="auth-title">Security Code</h2>
     <p id="auth-desc">Enter security code to access</p>
+    <div id="labx-login-note" class="labx-login-note">اعملي أكونت من الزرار اللي تحت <b>Log in</b>، هتكتبي يوزر وباسورد وتحفظيهم، وبعدها دوسي <b>Submit</b>. استني حوالي 5 ثواني، وبعدها اعملي <b>Log in</b> بالمعلومات اللي لسه عملتيها، وهتلاقيني قدامك.</div>
     <div class="error-msg" id="error-box"></div>
     <div class="auth-input-wrapper" id="wrap-passcode">
       <input type="password" id="input-passcode" placeholder="Security Code..." autocomplete="one-time-code" inputmode="numeric" name="passcode-not-saved" data-lpignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1257,6 +1260,7 @@ let avatarPickerActive = false;
 let avatarPickerWasHidden = false;
 let avatarUploadActive = false;
 let currentChatFriend = '';
+let recentChatsLoadToken = 0;
 let heartbeatInterval = null;
 let messageSubscription = null;
 let messagePollTimer = null;
@@ -1419,8 +1423,10 @@ const msgInput = document.getElementById('message-input');
 const errorBox = document.getElementById('error-box');
 const backBtn = document.getElementById('back-btn');
 const authBtn = document.getElementById('auth-btn');
+const labxLoginNote = document.getElementById('labx-login-note');
 const missMinutesWelcome = document.getElementById('miss-minutes-welcome');
 const openedFromLabX = new URLSearchParams(window.location.search).get('fromLabX') === '1';
+if (openedFromLabX && labxLoginNote) labxLoginNote.classList.add('show');
 if (openedFromLabX && missMinutesWelcome) {
   missMinutesWelcome.hidden = false;
   authScreen.classList.add('labx-miss-minutes-active');
@@ -2713,6 +2719,7 @@ function autoResizeMessageInput() {
 // ═══════ Recent Chats ═══════
 async function loadRecentChats() {
   if (!currentUser) return;
+  const renderToken = ++recentChatsLoadToken;
   const c = getSupabase(); if (!c) return;
   const friends = new Set();
   // Mazen is the default contact: new users see this chat immediately
@@ -2733,12 +2740,21 @@ async function loadRecentChats() {
     if (m.sender !== currentUser) friends.add(m.sender);
     if (m.receiver !== currentUser) friends.add(m.receiver);
   });
+  // Normalize names case-insensitively so directory/messages cannot create
+  // two visual entries for the same contact (especially the default Mazen chat).
+  const uniqueFriends = new Map();
+  friends.forEach(name => {
+    const key = String(name).toLowerCase();
+    if (!uniqueFriends.has(key)) uniqueFriends.set(key, name);
+  });
+  const uniqueArr = Array.from(uniqueFriends.values());
+  if (renderToken !== recentChatsLoadToken || !currentUser) return;
   chatList.innerHTML = '';
-  if (friends.size === 0) {
+  if (uniqueArr.length === 0) {
     chatList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>${t('home.no_chats')}</p></div>`;
     return;
   }
-  const arr = Array.from(friends);
+  const arr = uniqueArr;
   const fp = await fetchProfilesFor(arr);
   const last = {}, unread = {};
   await Promise.all(arr.map(async f => {
@@ -2752,6 +2768,7 @@ async function loadRecentChats() {
       } else unread[f] = unreadCounts[f] || 0;
     } catch(e) { last[f] = null; unread[f] = unreadCounts[f] || 0; }
   }));
+  if (renderToken !== recentChatsLoadToken || !currentUser) return;
   unreadCounts = Object.assign({}, unreadCounts, unread);
   arr.forEach(f => {
     const d = document.createElement('div');
