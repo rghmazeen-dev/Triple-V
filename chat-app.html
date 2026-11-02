@@ -660,13 +660,13 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
     <div id="labx-login-note" class="labx-login-note">اعملي أكونت من الزرار اللي تحت <b>Log in</b>، هتكتبي يوزر وباسورد وتحفظيهم، وبعدها دوسي <b>Submit</b>. استني حوالي 5 ثواني، وبعدها اعملي <b>Log in</b> بالمعلومات اللي لسه عملتيها، وهتلاقيني قدامك.</div>
     <div class="error-msg" id="error-box"></div>
     <div class="auth-input-wrapper" id="wrap-passcode">
-      <input type="password" id="input-passcode" placeholder="Security Code..." autocomplete="one-time-code" inputmode="numeric" name="passcode-not-saved" data-lpignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="password" id="input-passcode" placeholder="Security Code..." autocomplete="off" inputmode="numeric" name="site-access-code" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="auth-input-wrapper" id="wrap-username" style="display:none;">
-      <input type="text" id="input-username" placeholder="Username" autocomplete="off" name="chat-user" data-lpignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="text" id="input-username" placeholder="Username" autocomplete="off" name="site-user-field" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="auth-input-wrapper" id="wrap-password" style="display:none;">
-      <input type="password" id="input-password" placeholder="Password..." autocomplete="off" name="chat-pass" data-lpignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="password" id="input-password" placeholder="Password..." autocomplete="new-password" name="site-secret-field" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <button type="button" class="primary-btn" id="auth-btn">Continue</button>
     <span class="secondary-link" id="auth-switch-link" style="display:none;">No account? Register</span>
@@ -1428,6 +1428,10 @@ const backBtn = document.getElementById('back-btn');
 const authBtn = document.getElementById('auth-btn');
 const labxLoginNote = document.getElementById('labx-login-note');
 const missMinutesWelcome = document.getElementById('miss-minutes-welcome');
+['input-username', 'input-password'].forEach(id => {
+  const field = document.getElementById(id);
+  field?.addEventListener('focus', () => field.removeAttribute('readonly'), { once: true });
+});
 const openedFromLabX = new URLSearchParams(window.location.search).get('fromLabX') === '1';
 if (openedFromLabX && labxLoginNote) labxLoginNote.classList.add('show');
 if (openedFromLabX && missMinutesWelcome) {
