@@ -35,7 +35,7 @@
   <script>
     (() => {
       const SUPABASE_URL = 'https://aafnptpedklibvvytrdv.supabase.co';
-      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzIiwicmVmIjoiYWFmbnB0cGVka2xpYnZ2eXRyZHYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4Njc5OTY3NywiZXhwIjoyMTAyMzc1Njc3fQ.QuA-7sUFSF7z8tuQaccGI7Oo4jx8WjWoH6m1z9Ga9HQ';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZm5wdHBlZGtsaWJ2dnl0cmR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3OTk2NzQsImV4cCI6MjEwMjM3NTY3NH0.QuA-7sUFSF7z8tuQaccGI7Oo4jx8WjWoH6m1z9Ga9HQ';
       if (!sessionStorage.getItem('private-chat-site-start')) sessionStorage.setItem('private-chat-site-start', String(Date.now()));
       const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
       const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
