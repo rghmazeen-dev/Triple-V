@@ -134,24 +134,19 @@ button,input,textarea { font:inherit; }
 .primary-btn:active { transform:scale(.98); }
 .secondary-link { color:var(--text-muted); margin-top:15px; cursor:pointer; font-size:.85rem; text-decoration:underline; }
 .error-msg { color:#ff4d4d; background:rgba(255,77,77,.1); border:1px solid rgba(255,77,77,.3); padding:10px; border-radius:12px; font-size:.85rem; width:100%; max-width:380px; margin-bottom:15px; display:none; text-align:center; word-break:break-word; }
-.labx-login-note { display:none; width:min(390px,calc(100vw - 34px)); margin:0 auto 14px; padding:11px 13px; border:1px solid rgba(110,231,249,.35); border-radius:13px; background:rgba(15,38,58,.82); color:#d9f8ff; font-size:.78rem; line-height:1.7; text-align:right; direction:rtl; }
-.labx-login-note.show { display:block; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:30; max-height:30vh; overflow:auto; box-shadow:0 10px 30px rgba(0,0,0,.35); }
 #auth-screen .miss-minutes-welcome[hidden] { display:none !important; }
 #auth-screen .miss-minutes-welcome { position:absolute; inset:0; z-index:15; display:block; width:100%; height:100%; margin:0; pointer-events:none; overflow:hidden; }
-#auth-screen .miss-minutes-actor { --mm-bottom-gap:170px; position:absolute; left:50%; top:6%; width:min(330px,calc(100vw - 16px)); height:154px; display:flex; align-items:center; justify-content:center; gap:4px; transform:translateX(-50%); will-change:left,top,transform; }
+#auth-screen .miss-minutes-actor { --mm-bottom-gap:170px; position:absolute; left:50%; top:6%; width:min(330px,calc(100vw - 16px)); height:154px; display:flex; align-items:center; justify-content:center; transform:translateX(-50%); will-change:left,top,transform; }
 #auth-screen .miss-minutes-welcome.miss-minutes-playful .miss-minutes-actor { animation:missMinutesWander 18s ease-in-out infinite; }
 #auth-screen .miss-minutes-visual-wrap { position:relative; flex:0 0 clamp(105px,28vw,136px); width:clamp(105px,28vw,136px); height:148px; display:grid; place-items:center; }
 #auth-screen .miss-minutes-wave, #auth-screen .miss-minutes-laughing-pose { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 14px rgba(255,154,32,.22)); }
 #auth-screen .miss-minutes-wave { mix-blend-mode:lighten; }
 #auth-screen .miss-minutes-wave[hidden], #auth-screen .miss-minutes-laughing-pose[hidden] { display:none !important; }
-#auth-screen .miss-minutes-bubble { position:relative; flex:0 1 auto; max-width:calc(100vw - 150px); padding:11px 14px; border:1px solid rgba(232,166,48,.88); border-radius:20px 20px 20px 6px; background:linear-gradient(145deg,#fffef8,#fff0cf); color:#33210d; box-shadow:0 9px 26px rgba(0,0,0,.28),0 0 18px rgba(255,176,44,.12); font-size:clamp(.74rem,2.8vw,.9rem); font-weight:800; line-height:1.35; text-align:center; animation:missMinutesBubbleIn .48s .16s both; }
-#auth-screen .miss-minutes-bubble::before { content:''; position:absolute; left:-7px; top:calc(50% - 7px); width:13px; height:13px; background:#fff8e5; border-left:1px solid rgba(232,166,48,.88); border-bottom:1px solid rgba(232,166,48,.88); transform:rotate(45deg); }
 #auth-screen .miss-minutes-welcome.miss-minutes-playful .miss-minutes-laughing-pose { animation:missMinutesLaughFlip 3.2s ease-in-out infinite; }
-@keyframes missMinutesBubbleIn { from { opacity:0; transform:translateX(10px) scale(.96); } to { opacity:1; transform:translateX(0) scale(1); } }
 @keyframes missMinutesWander { 0%,100% { left:50%; top:6%; transform:translateX(-50%); } 23% { left:calc(100% - 8px); top:7%; transform:translateX(-100%); } 46% { left:calc(100% - 8px); top:calc(100% - var(--mm-bottom-gap)); transform:translateX(-100%); } 69% { left:8px; top:calc(100% - var(--mm-bottom-gap)); transform:translateX(0); } 88% { left:8px; top:14%; transform:translateX(0); } }
 @keyframes missMinutesLaughFlip { 0%,100% { transform:translateY(0) rotate(0) scale(1); } 18% { transform:translateY(-12px) rotate(45deg) scale(1.06); } 48% { transform:translateY(5px) rotate(180deg) scale(.96); } 76% { transform:translateY(-10px) rotate(315deg) scale(1.04); } }
-@media (max-height:680px) { #auth-screen .miss-minutes-actor { --mm-bottom-gap:142px; height:128px; } #auth-screen .miss-minutes-visual-wrap { flex-basis:98px; width:98px; height:122px; } #auth-screen .miss-minutes-bubble { padding:9px 12px; font-size:.74rem; } }
-@media (max-width:360px) { #auth-screen .miss-minutes-actor { width:calc(100vw - 12px); } #auth-screen .miss-minutes-visual-wrap { flex-basis:96px; width:96px; } #auth-screen .miss-minutes-bubble { max-width:calc(100vw - 132px); padding:8px 10px; font-size:.72rem; } }
+@media (max-height:680px) { #auth-screen .miss-minutes-actor { --mm-bottom-gap:142px; height:128px; } #auth-screen .miss-minutes-visual-wrap { flex-basis:98px; width:98px; height:122px; } }
+@media (max-width:360px) { #auth-screen .miss-minutes-actor { width:calc(100vw - 12px); } #auth-screen .miss-minutes-visual-wrap { flex-basis:96px; width:96px; } }
 .header { padding:12px 16px; padding-top:max(12px,env(safe-area-inset-top)); border-bottom:1px solid var(--glass-border); background-color:var(--header-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); display:flex; justify-content:space-between; align-items:center; z-index:10; flex:0 0 auto; }
 .header h3 { font-size:1.1rem; }
 .chat-header-main { display:flex; align-items:center; gap:11px; min-width:0; }
@@ -644,29 +639,24 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 <!-- ═══════ Auth Screen ═══════ -->
 <div id="auth-screen" class="screen active">
   <div class="back-btn-absolute" id="back-btn"><i class="fa-solid fa-arrow-left"></i></div>
-  <div class="miss-minutes-welcome" id="miss-minutes-welcome" hidden role="status" aria-live="polite" aria-label="Miss Minutes welcoming message">
+  <div class="miss-minutes-welcome" id="miss-minutes-welcome" hidden aria-label="Miss Minutes animated character, no speech bubble">
     <div class="miss-minutes-actor" id="miss-minutes-actor">
       <div class="miss-minutes-visual-wrap">
         <img class="miss-minutes-wave" id="miss-minutes-wave" data-src="assets/miss-minutes-wave-alpha.webp" alt="" draggable="false">
         <img class="miss-minutes-laughing-pose" id="miss-minutes-laughing-pose" data-src="assets/miss-minutes-laughing-pose.png" alt="" draggable="false" hidden>
       </div>
-      <div class="miss-minutes-bubble" dir="ltr">Hey my name is Miss Minutes</div>
     </div>
   </div>
   <div class="auth-container">
     <i class="fa-solid fa-lock" id="auth-icon"></i>
     <h2 id="auth-title">Security Code</h2>
     <p id="auth-desc">Enter security code to access</p>
-    <div id="labx-login-note" class="labx-login-note">اعملي أكونت من الزرار اللي تحت <b>Log in</b>، هتكتبي يوزر وباسورد وتحفظيهم، وبعدها دوسي <b>Submit</b>. استني حوالي 5 ثواني، وبعدها اعملي <b>Log in</b> بالمعلومات اللي لسه عملتيها، وهتلاقيني قدامك.</div>
     <div class="error-msg" id="error-box"></div>
     <div class="auth-input-wrapper" id="wrap-passcode">
       <input type="password" id="input-passcode" placeholder="Security Code..." autocomplete="off" inputmode="numeric" name="site-access-code" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="auth-input-wrapper" id="wrap-username" style="display:none;">
       <input type="text" id="input-username" placeholder="Username" autocomplete="off" name="site-user-field" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
-    </div>
-    <div class="auth-input-wrapper" id="wrap-password" style="display:none;">
-      <input type="password" id="input-password" placeholder="Password..." autocomplete="new-password" name="site-secret-field" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <button type="button" class="primary-btn" id="auth-btn">Continue</button>
     <span class="secondary-link" id="auth-switch-link" style="display:none;">No account? Register</span>
@@ -1094,23 +1084,11 @@ function withTimeout(promise, ms = 15000) {
   const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Request timed out. Check your connection and try again.')), ms); });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
-async function loginAccountRpc(username, password) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
-  try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/login_account`, {
-      method: 'POST',
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_username: username, p_password: password }),
-      signal: controller.signal,
-      cache: 'no-store'
-    });
-    const body = await response.json().catch(() => null);
-    if (!response.ok) return { data: null, error: { message: body?.message || body?.error_description || `Login request failed (${response.status}).` } };
-    return { data: body, error: null };
-  } catch (e) {
-    return { data: null, error: { message: e?.name === 'AbortError' ? 'Login request timed out. Check your connection and try again.' : (e?.message || 'Login request failed.') } };
-  } finally { clearTimeout(timer); }
+async function createInternalCredential() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  const randomValue = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return sha256Hex(randomValue);
 }
 
 // ═══════ Admin-controlled security-question layer switch ═══════
@@ -1153,28 +1131,25 @@ function setSecurityQuestionLayer(enabled) {
   securityQuestionsEnabled = !!enabled;
   if (!securityQuestionsEnabled && securityQuestionOverlay) {
     removeSecurityChallengeOverlay();
-    const pending = pendingSecurityLogin;
     pendingSecurityLogin = null;
-    if (pending) completeApprovedLogin(pending.data, pending.username, pending.bindRes).catch(e => {
-      console.error(e); showError(t('auth.error.unexpected') + (e?.message || e));
-    });
+    showError('التحقق الأمني مطلوب للدخول، لكنه غير متاح الآن. حاول مرة أخرى لاحقًا.');
   }
 }
-async function beginSecurityChallenge(client, username, passwordHash) {
-  if (!securityQuestionsEnabled) return { required: false };
+async function beginSecurityChallenge(client, username) {
   try {
     const { data, error } = await withTimeout(client.rpc('begin_security_challenge', {
-      p_username: username, p_password_hash: passwordHash
+      p_username: username
     }));
-    if (error || !data) return { required: securityQuestionsEnabled, error: true };
-    if (data.error) return { required: true, error: true };
-    if (!data.enabled || data.exhausted) return { required: false };
-    if (data.banned_until) return { required: true, bannedUntil: data.banned_until, token: data.token || null, questions: data.questions || [] };
+    if (error || !data) return { found: true, error: true };
+    if (!data.found) return { found: false };
+    if (data.status !== 'approved') return { found: true, status: data.status };
+    if (data.error) return { found: true, status: data.status, error: true };
+    if (data.banned_until) return { found: true, status: data.status, bannedUntil: data.banned_until };
     if (data.token && Array.isArray(data.questions) && data.questions.length === 6) {
-      return { required: true, token: data.token, questions: data.questions };
+      return { found: true, status: data.status, token: data.token, questions: data.questions };
     }
-    return { required: false };
-  } catch (_) { return { required: securityQuestionsEnabled, error: true }; }
+    return { found: true, status: data.status, error: true };
+  } catch (_) { return { found: true, error: true }; }
 }
 function showSecurityBan(until) {
   removeSecurityChallengeOverlay();
@@ -1198,18 +1173,27 @@ function showSecurityBan(until) {
       if (securityBanTimer) clearInterval(securityBanTimer); securityBanTimer=null;
       removeSecurityChallengeOverlay();
       const pending = pendingSecurityLogin;
-      if (pending && securityQuestionsEnabled) openSecurityChallengeAgain(pending).catch(console.error);
-      else if (pending) { pendingSecurityLogin=null; completeApprovedLogin(pending.data,pending.username,pending.bindRes).catch(console.error); }
+      if (pending && securityQuestionsEnabled) openSecurityChallengeAgain(pending).catch(error => {
+        pendingSecurityLogin = null;
+        console.error(error);
+        showError('تعذر إعادة تحميل التحقق الأمني. حاول مرة أخرى.');
+      });
+      else if (pending) {
+        pendingSecurityLogin = null;
+        showError('التحقق الأمني مطلوب للدخول، لكنه غير متاح الآن. حاول مرة أخرى لاحقًا.');
+      }
     }
   };
   tick(); securityBanTimer=setInterval(tick,250);
 }
 async function openSecurityChallengeAgain(pending) {
-  if (!securityQuestionsEnabled) { pendingSecurityLogin=null; await completeApprovedLogin(pending.data,pending.username,pending.bindRes); return; }
-  const c=getSupabase(); if(!c) return;
-  const result=await beginSecurityChallenge(c,pending.username,pending.passwordHash);
-  if (result.error) { pendingSecurityLogin=null; showError('تعذر تحميل التحقق الأمني. حاول مرة أخرى لاحقًا.'); return; }
-  if (!result.required) { pendingSecurityLogin=null; await completeApprovedLogin(pending.data,pending.username,pending.bindRes); return; }
+  const c=getSupabase(); if(!c) { pendingSecurityLogin=null; showError(t('auth.error.db')); return; }
+  const result=await beginSecurityChallenge(c,pending.username);
+  if (result.error || !result.found || result.status !== 'approved') {
+    pendingSecurityLogin=null;
+    showError('تعذر تحميل التحقق الأمني. حاول مرة أخرى لاحقًا.');
+    return;
+  }
   if (result.bannedUntil) { showSecurityBan(result.bannedUntil); return; }
   securityChallengeToken=result.token; securityChallengeQuestions=result.questions;
   renderSecurityChallenge();
@@ -1242,10 +1226,10 @@ function renderSecurityChallenge() {
     try {
       const c=getSupabase(); const {data,error:rpcError}=await c.rpc('verify_security_challenge',{p_token:securityChallengeToken,p_answers:answers});
       if(rpcError||!data){error.textContent='تعذر التحقق. حاول مرة أخرى.';submit.disabled=false;submit.textContent='تحقق';return;}
-      if(data.passed){
+      if(data.passed && data.token && data.account){
         removeSecurityChallengeOverlay(); securityChallengeToken=null; securityChallengeQuestions=[];
         const pending=pendingSecurityLogin; pendingSecurityLogin=null;
-        if(pending) await completeApprovedLogin(pending.data,pending.username,pending.bindRes);
+        if(pending) await completeApprovedLogin(data.account,pending.username,data.token);
       } else {
         const pending=pendingSecurityLogin;
         showSecurityBan(data.banned_until || new Date(Date.now()+30000).toISOString());
@@ -1258,7 +1242,7 @@ function renderSecurityChallenge() {
 // ═══════ Global State ═══════
 let currentUser = '';
 let currentAccountData = null;
-let currentPassword = ''; // kept in memory only, used to re-auth RPC calls after login
+let currentAuthProof = ''; // short-lived proof issued only after the security-question challenge
 let avatarPickerActive = false;
 let avatarPickerWasHidden = false;
 let avatarUploadActive = false;
@@ -1401,11 +1385,9 @@ function pairFilter(fn) {
   return `and(sender.eq.${currentUser},receiver.eq.${fn}),and(sender.eq.${fn},receiver.eq.${currentUser})`;
 }
 
-// ═══════ Password hashing (client-side SHA-256) ═══════
-// NOTE: this stops passwords being stored as plain text, but it is NOT a
-// substitute for real server-side auth (Supabase Auth) — anyone who can
-// read the account_requests table still gets the hash, and a hash with no
-// per-user salt can be attacked with rainbow tables for weak passwords.
+// ═══════ Internal credential hashing (client-side SHA-256) ═══════
+// This hashes a fresh, cryptographically random credential used only to
+// satisfy the legacy account schema; it is never a password entered by a user.
 async function sha256Hex(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1426,17 +1408,14 @@ const msgInput = document.getElementById('message-input');
 const errorBox = document.getElementById('error-box');
 const backBtn = document.getElementById('back-btn');
 const authBtn = document.getElementById('auth-btn');
-const labxLoginNote = document.getElementById('labx-login-note');
 const missMinutesWelcome = document.getElementById('miss-minutes-welcome');
-['input-username', 'input-password'].forEach(id => {
+['input-username'].forEach(id => {
   const field = document.getElementById(id);
   field?.addEventListener('focus', () => field.removeAttribute('readonly'), { once: true });
 });
 const openedFromLabX = new URLSearchParams(window.location.search).get('fromLabX') === '1';
-if (openedFromLabX && labxLoginNote) labxLoginNote.classList.add('show');
 if (openedFromLabX && missMinutesWelcome) {
   missMinutesWelcome.hidden = false;
-  authScreen.classList.add('labx-miss-minutes-active');
   const greetingWave = document.getElementById('miss-minutes-wave');
   const laughingPose = document.getElementById('miss-minutes-laughing-pose');
   if (greetingWave) {
@@ -1502,7 +1481,7 @@ async function verifyDeviceBinding(data) {
   const fp = await getDeviceFingerprint();
   try {
     const { data: rows, error } = await withTimeout(c.rpc('sync_device_binding', {
-      p_id: data.id, p_password: currentPassword, p_fingerprint: fp
+      p_id: data.id, p_password: currentAuthProof, p_fingerprint: fp
     }), 12000);
     const r = Array.isArray(rows) ? rows[0] : rows;
     if (error || !r) return { allowed: true, fp }; // fail-open to match previous try/catch behaviour
@@ -1798,7 +1777,6 @@ function updateAuthUI() {
   hideError();
   const wp = document.getElementById('wrap-passcode');
   const wu = document.getElementById('wrap-username');
-  const wpass = document.getElementById('wrap-password');
   const sl = document.getElementById('auth-switch-link');
   const ll = document.getElementById('auth-login-link');
   const at = document.getElementById('auth-title');
@@ -1812,32 +1790,24 @@ function updateAuthUI() {
     at.innerText = t('auth.title.passcode');
     ad.innerText = t('auth.desc.passcode');
     authBtn.innerText = t('auth.continue');
-  } else if (authStep === 'login') {
-    backBtn.style.display = 'flex';
-    wp.style.display = 'none'; wu.style.display = 'flex'; wpass.style.display = 'flex';
-    sl.style.display = 'block'; ll.style.display = 'none';
-    ai.className = 'fa-solid fa-right-to-bracket';
-    at.innerText = t('auth.title.login');
-    ad.innerText = t('auth.desc.login');
-    authBtn.innerText = t('auth.signin');
   } else {
+    authStep = 'login';
     backBtn.style.display = 'flex';
-    wp.style.display = 'none'; wu.style.display = 'flex'; wpass.style.display = 'flex';
-    sl.style.display = 'none'; ll.style.display = 'block';
-    ai.className = 'fa-solid fa-user-plus';
-    at.innerText = t('auth.title.register');
-    ad.innerText = t('auth.desc.register');
-    authBtn.innerText = t('auth.submit');
+    wp.style.display = 'none'; wu.style.display = 'flex';
+    sl.style.display = 'none'; ll.style.display = 'none';
+    ai.className = 'fa-solid fa-user';
+    at.innerText = t('auth.title.login');
+    ad.innerText = 'اكتب اسم المستخدم للمتابعة إلى التحقق الأمني.';
+    authBtn.innerText = 'متابعة';
   }
   try { updateFsButtonVisibility(); } catch(e) {}
 }
-function switchToRegister() { authStep = 'register'; updateAuthUI(); document.getElementById('input-username').focus(); }
+function switchToRegister() { authStep = 'login'; updateAuthUI(); document.getElementById('input-username').focus(); }
 function switchToLogin() { authStep = 'login'; updateAuthUI(); try { document.getElementById('input-username').focus(); } catch(e){} }
 function goBackToPasscode() {
   authStep = 'passcode';
   document.getElementById('input-passcode').value = '';
   document.getElementById('input-username').value = '';
-  document.getElementById('input-password').value = '';
   updateAuthUI();
 }
 
@@ -1857,17 +1827,30 @@ async function verifyPasscode(pv) {
   } catch(e) { return false; }
 }
 
-async function completeApprovedLogin(data, uv, bindRes) {
+async function completeApprovedLogin(data, uv, sessionProof) {
   const client = getSupabase(); if (!client) throw new Error('Database unavailable');
-  const sid = localStorage.getItem('chat-session-id') || (Math.random().toString(36).slice(2) + Date.now().toString(36));
+  if (!data || data.status !== 'approved' || !sessionProof) {
+    showError('تعذر إكمال الدخول بعد التحقق الأمني. حاول مرة أخرى.');
+    return;
+  }
+  currentAuthProof = sessionProof;
+  const bindRes = await verifyDeviceBinding(data);
+  if (!bindRes.allowed) {
+    currentAuthProof = '';
+    showError(t('device.bound'));
+    return;
+  }
+  const sid = localStorage.getItem('chat-session-id') || (crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36)));
   localStorage.setItem('chat-session-id', sid);
-  try {
-    const { data: rows, error } = await withTimeout(client.rpc('begin_session', {
-      p_id: data.id, p_password: currentPassword, p_session_id: sid
-    }));
-    const r = Array.isArray(rows) ? rows[0] : rows;
-    if (!error && r && r.allowed === false) { showError(t('session.in_use')); return; }
-  } catch(e){}
+  const { data: rows, error } = await withTimeout(client.rpc('begin_session', {
+    p_id: data.id, p_password: sessionProof, p_session_id: sid
+  }));
+  const r = Array.isArray(rows) ? rows[0] : rows;
+  if (error || !r || r.allowed !== true) {
+    currentAuthProof = '';
+    showError(r?.reason === 'session_in_use' ? t('session.in_use') : 'تعذر إنشاء جلسة دخول آمنة. حاول مرة أخرى.');
+    return;
+  }
   if (openedFromLabX) {
     const greetingWave = document.getElementById('miss-minutes-wave');
     if (greetingWave) { greetingWave.hidden = true; greetingWave.removeAttribute('src'); }
@@ -1880,9 +1863,8 @@ async function completeApprovedLogin(data, uv, bindRes) {
       window.history.replaceState(window.history.state, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
     } catch(e){}
   }
-  currentUser = uv;
+  currentUser = data.username || uv;
   currentAccountData = data;
-  if (labxLoginNote) labxLoginNote.classList.remove('show');
   document.getElementById('welcome-text').innerText = t('home.welcome') + currentUser;
   authScreen.classList.remove('active');
   homeScreen.classList.add('active');
@@ -1903,71 +1885,53 @@ async function handleAuthAction() {
       else showError(t('auth.error.invalid_passcode'));
       return;
     }
+
     const client = getSupabase();
     if (!client) { showError(t('auth.error.db')); return; }
-
-    if (authStep === 'login') {
-      const uv = document.getElementById('input-username').value.trim();
-      const pv = document.getElementById('input-password').value.trim();
-      if (!uv || !pv) { showError(t('auth.error.fill_fields')); return; }
-      authBtn.disabled = true; authBtn.style.opacity = '.7';
-      // Backward-compatible login: try existing plaintext credentials first,
-      // then SHA-256 for accounts created after the registration fix.
-      let pvHash = pv;
-      let { data: loginRows, error } = await loginAccountRpc(uv, pvHash);
-      let data = Array.isArray(loginRows) ? loginRows[0] : loginRows;
-      if (!error && !data) {
-        const hashedPassword = await sha256Hex(pv);
-        const retry = await loginAccountRpc(uv, hashedPassword);
-        error = retry.error;
-        loginRows = retry.data;
-        data = Array.isArray(loginRows) ? loginRows[0] : loginRows;
-        if (!error && data) pvHash = hashedPassword;
-      }
-      authBtn.disabled = false; authBtn.style.opacity = '1';
-      if (error) { showError('Error: ' + error.message); return; }
-      if (!data) { showError(t('auth.error.invalid_credentials')); return; }
-      currentPassword = pvHash;
-      if (data.status === 'rejected') { showError(t('auth.error.banned')); return; }
-      if (data.status === 'pending') { showError(t('auth.error.pending')); return; }
-      if (data.status !== 'approved') { showError('Unknown account status'); return; }
-
-      const bindRes = await verifyDeviceBinding(data);
-      if (!bindRes.allowed) {
-        showError(t('device.bound'));
-        authBtn.disabled = false; authBtn.style.opacity = '1';
-        return;
-      }
-
-      await securityQuestionSettingReady;
-      const gate = await beginSecurityChallenge(client, uv, pvHash);
-      if (gate.error) { showError('تعذر تحميل التحقق الأمني. حاول مرة أخرى لاحقًا.'); authBtn.disabled = false; authBtn.style.opacity = '1'; return; }
-      if (gate.required) {
-        pendingSecurityLogin = { data, username: uv, passwordHash: pvHash, bindRes };
-        if (gate.bannedUntil) showSecurityBan(gate.bannedUntil);
-        else { securityChallengeToken = gate.token; securityChallengeQuestions = gate.questions; renderSecurityChallenge(); }
-        authBtn.disabled = false; authBtn.style.opacity = '1';
-        return;
-      }
-      await completeApprovedLogin(data, uv, bindRes);
-    } else if (authStep === 'register') {
-      const uv = document.getElementById('input-username').value.trim();
-      const pv = document.getElementById('input-password').value.trim();
-      if (!uv || !pv) { showError(t('auth.error.fill_fields')); return; }
-      if (!USERNAME_RE.test(uv)) { showError('Username must be 3-20 characters: letters, numbers, underscore only.'); return; }
-      authBtn.disabled = true; authBtn.style.opacity = '.7';
-      // New registrations store the SHA-256 digest expected by register_account.
-      const pvHash = await sha256Hex(pv);
-      const { error } = await withTimeout(client.rpc('register_account', { p_username: uv, p_password: pvHash }));
-      authBtn.disabled = false; authBtn.style.opacity = '1';
-      if (error) { showError(error.message || 'Error'); return; }
-      toast(t('auth.success.register'), 'success');
-      document.getElementById('input-password').value = '';
-      switchToLogin();
+    const username = document.getElementById('input-username').value.trim();
+    if (!USERNAME_RE.test(username)) {
+      showError('اسم المستخدم يجب أن يكون من 3 إلى 20 حرفًا أو رقمًا أو _ فقط.');
+      return;
     }
+
+    authBtn.disabled = true; authBtn.style.opacity = '.7'; authBtn.textContent = 'جارٍ التحقق…';
+    await securityQuestionSettingReady;
+    let gate = await beginSecurityChallenge(client, username);
+
+    if (!gate.found && !gate.error) {
+      const internalCredential = await createInternalCredential();
+      const { data: registration, error: registrationError } = await withTimeout(client.rpc('register_account', {
+        p_username: username,
+        p_password: internalCredential
+      }));
+      if (registrationError) {
+        authBtn.disabled = false; authBtn.style.opacity = '1'; authBtn.textContent = 'متابعة';
+        showError(registrationError.message || 'تعذر إنشاء الحساب. حاول مرة أخرى.');
+        return;
+      }
+      if (registration?.status === 'pending') {
+        authBtn.disabled = false; authBtn.style.opacity = '1'; authBtn.textContent = 'متابعة';
+        showError(t('auth.error.pending'));
+        return;
+      }
+      gate = await beginSecurityChallenge(client, username);
+    }
+
+    authBtn.disabled = false; authBtn.style.opacity = '1'; authBtn.textContent = 'متابعة';
+    if (gate.error) { showError('تعذر تحميل التحقق الأمني. حاول مرة أخرى لاحقًا.'); return; }
+    if (!gate.found) { showError('تعذر العثور على الحساب أو إنشاؤه.'); return; }
+    if (gate.status === 'pending') { showError(t('auth.error.pending')); return; }
+    if (gate.status === 'rejected') { showError(t('auth.error.banned')); return; }
+    if (gate.status !== 'approved') { showError('حالة الحساب غير معروفة.'); return; }
+
+    pendingSecurityLogin = { username };
+    if (gate.bannedUntil) { showSecurityBan(gate.bannedUntil); return; }
+    securityChallengeToken = gate.token;
+    securityChallengeQuestions = gate.questions;
+    renderSecurityChallenge();
   } catch(err) {
     console.error(err);
-    authBtn.disabled = false; authBtn.style.opacity = '1';
+    authBtn.disabled = false; authBtn.style.opacity = '1'; authBtn.textContent = 'متابعة';
     showError(t('auth.error.unexpected') + (err?.message || err));
   }
 }
@@ -2002,7 +1966,7 @@ function startUsageHeartbeat() {
     if (document.visibilityState !== 'visible' || !currentAccountData) return;
     const c = getSupabase(); if (!c) return;
     const { data: newUsage, error } = await c.rpc('heartbeat_usage', {
-      p_id: currentAccountData.id, p_password: currentPassword, p_increment: 15
+      p_id: currentAccountData.id, p_password: currentAuthProof, p_increment: 15
     });
     if (!error && typeof newUsage === 'number') currentAccountData.usage_seconds = newUsage;
   }, 15000);
@@ -2372,10 +2336,10 @@ async function logout() {
   const c = getSupabase();
   try {
     if (c && currentAccountData?.id) {
-      await c.rpc('end_session', { p_id: currentAccountData.id, p_password: currentPassword });
+      await c.rpc('end_session', { p_id: currentAccountData.id, p_password: currentAuthProof });
     }
   } catch(e){}
-  currentPassword = '';
+  currentAuthProof = '';
   [messageSubscription, userStatusSubscription, requestSubscription, approvedDirectorySubscription, pollVoteSubscription].forEach(s => {
     if (s && c) { try { c.removeChannel(s); } catch(e){} }
   });
@@ -4363,11 +4327,8 @@ if (authBtn) {
 document.getElementById('input-passcode')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); handleAuthAction(); }
 });
-document.getElementById('input-password')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); handleAuthAction(); }
-});
 document.getElementById('input-username')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && authStep === 'register') { e.preventDefault(); handleAuthAction(); }
+  if (e.key === 'Enter' && authStep === 'login') { e.preventDefault(); handleAuthAction(); }
 });
 
 // ═══════ Notifications center ═══════
@@ -4763,9 +4724,9 @@ document.addEventListener('keydown', e => {
 
 // ═══════ Before Unload ═══════
 window.addEventListener('beforeunload', () => {
-  if (!avatarPickerActive && !avatarUploadActive && currentAccountData?.id && currentPassword) {
+  if (!avatarPickerActive && !avatarUploadActive && currentAccountData?.id && currentAuthProof) {
     const c = getSupabase();
-    if (c) c.rpc('end_session', { p_id: currentAccountData.id, p_password: currentPassword }).then(() => {});
+    if (c) c.rpc('end_session', { p_id: currentAccountData.id, p_password: currentAuthProof }).then(() => {});
   }
 });
 
