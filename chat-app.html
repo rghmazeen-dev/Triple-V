@@ -1256,6 +1256,7 @@ function renderSecurityChallenge() {
 let currentUser = '';
 let hiddenChatPartners = new Set();
 let hiddenChatPollTimer = null;
+let hiddenChatVisibilityChannel = null;
 let currentAccountData = null;
 let currentAuthProof = ''; // short-lived proof issued only after the security-question challenge
 let avatarPickerActive = false;
@@ -1885,6 +1886,7 @@ async function completeApprovedLogin(data, uv, sessionProof) {
   homeScreen.classList.add('active');
   startUsageHeartbeat(); startOnlinePresence(); setupApprovedDirectorySubscription(); loadRecentChats(); loadMyProfile();
   initMazenHiddenChatControls();
+  setupHiddenChatVisibilitySubscription();
   refreshMazenHiddenChatControls();
   if (hiddenChatPollTimer) clearInterval(hiddenChatPollTimer);
   hiddenChatPollTimer = setInterval(() => { refreshHiddenChatPartners().then(() => loadRecentChats()); }, 5000);
@@ -2231,6 +2233,7 @@ async function hideMazenChat() {
   if (error || data !== true) { setMazenHiddenChatStatus(error?.message || 'Only Mazen can hide chats.', 'error'); return; }
   await refreshHiddenChatPartners();
   if (currentChatFriend && isHiddenChatPartner(currentChatFriend)) { currentChatFriend = ''; chatScreen.classList.remove('active'); homeScreen.classList.add('active'); }
+  broadcastHiddenChatVisibility(target, 'hidden');
   await loadRecentChats(); await refreshMazenHiddenChatControls();
   setMazenHiddenChatStatus(`Chat with ${target} is hidden for both accounts.`, 'success');
 }
@@ -2241,6 +2244,7 @@ async function restoreMazenChat() {
   const c = getSupabase(); if (!c) return;
   const { data, error } = await c.rpc('unhide_private_chat', { p_actor: currentUser, p_target: target });
   if (error || data !== true) { setMazenHiddenChatStatus(error?.message || 'Only Mazen can restore chats.', 'error'); return; }
+  broadcastHiddenChatVisibility(target, 'visible');
   await refreshHiddenChatPartners(); await loadRecentChats(); await refreshMazenHiddenChatControls();
   setMazenHiddenChatStatus(`Chat with ${target} is visible again for both accounts.`, 'success');
 }
@@ -2248,6 +2252,35 @@ function initMazenHiddenChatControls() {
   const hideBtn = document.getElementById('mazen-hide-chat-btn'), restoreBtn = document.getElementById('mazen-restore-chat-btn');
   if (hideBtn && !hideBtn.dataset.bound) { hideBtn.dataset.bound = '1'; hideBtn.addEventListener('click', hideMazenChat); }
   if (restoreBtn && !restoreBtn.dataset.bound) { restoreBtn.dataset.bound = '1'; restoreBtn.addEventListener('click', restoreMazenChat); }
+}
+function closeHiddenChatIfOpen(target) {
+  if (!currentChatFriend || String(currentChatFriend).toLowerCase() !== String(target).toLowerCase()) return;
+  currentChatFriend = '';
+  chatScreen.classList.remove('active');
+  homeScreen.classList.add('active');
+}
+function setupHiddenChatVisibilitySubscription() {
+  const c = getSupabase(); if (!c || !currentUser) return;
+  if (hiddenChatVisibilityChannel) { try { c.removeChannel(hiddenChatVisibilityChannel); } catch(e) {} }
+  hiddenChatVisibilityChannel = c.channel('private-chat-visibility', { config: { broadcast: { self: true } } })
+    .on('broadcast', { event: 'chat_visibility_changed' }, ({ payload }) => {
+      const target = String(payload?.target || '').trim();
+      const action = String(payload?.action || '');
+      if (!target || !['hidden', 'visible'].includes(action)) return;
+      const isMazen = String(currentUser).toLowerCase() === 'mazen';
+      const concernsThisUser = isMazen || String(currentUser).toLowerCase() === target.toLowerCase();
+      if (!concernsThisUser) return;
+      refreshHiddenChatPartners().then(() => {
+        if (action === 'hidden') closeHiddenChatIfOpen(isMazen ? target : 'Mazen');
+        loadRecentChats();
+        if (isMazen) refreshMazenHiddenChatControls();
+      });
+    })
+    .subscribe();
+}
+function broadcastHiddenChatVisibility(target, action) {
+  if (!hiddenChatVisibilityChannel || !target) return;
+  hiddenChatVisibilityChannel.send({ type: 'broadcast', event: 'chat_visibility_changed', payload: { target, action } }).catch(() => {});
 }
 // ═══════ Settings Drawer ═══════
 function openSettings() {
@@ -2430,6 +2463,8 @@ async function logout() {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   if (hiddenChatPollTimer) clearInterval(hiddenChatPollTimer);
   hiddenChatPollTimer = null;
+  if (hiddenChatVisibilityChannel && c) { try { await c.removeChannel(hiddenChatVisibilityChannel); } catch(e) {} }
+  hiddenChatVisibilityChannel = null;
   messageSubscription = userStatusSubscription = requestSubscription = approvedDirectorySubscription = pollVoteSubscription = presenceChannel = null;
   currentUser = ''; currentAccountData = null; currentChatFriend = '';
   unreadCounts = {}; msgCache.clear();
