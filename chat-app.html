@@ -717,6 +717,19 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
         </div>
       </div>
     </div>
+    <div class="settings-section" id="mazen-hidden-chats-section" style="display:none;">
+      <button type="button" class="settings-section-header" data-toggle-section="mazen-hidden-chats-section-body">
+        <span>Hidden chats</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="mazen-hidden-chats-section-body">
+        <div class="profile-save-status" style="text-align:right;margin-bottom:8px;">Hide a chat for both people. Messages are kept and can be restored.</div>
+        <select id="mazen-hide-chat-select" class="profile-name-input"><option value="">Choose a person to hide</option></select>
+        <button type="button" class="profile-save-btn" id="mazen-hide-chat-btn" style="margin-top:8px;"><i class="fa-solid fa-eye-slash"></i> Hide chat for both</button>
+        <select id="mazen-restore-chat-select" class="profile-name-input" style="margin-top:12px;"><option value="">Choose a hidden chat</option></select>
+        <button type="button" class="secondary-btn" id="mazen-restore-chat-btn" style="width:100%;margin-top:8px;"><i class="fa-solid fa-eye"></i> Show chat again</button>
+        <div class="profile-save-status" id="mazen-hidden-chat-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
     <div class="settings-section">
       <button type="button" class="settings-section-header" data-toggle-section="fonts-section-body">
         <span>Font</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
@@ -1241,6 +1254,8 @@ function renderSecurityChallenge() {
 
 // ═══════ Global State ═══════
 let currentUser = '';
+let hiddenChatPartners = new Set();
+let hiddenChatPollTimer = null;
 let currentAccountData = null;
 let currentAuthProof = ''; // short-lived proof issued only after the security-question challenge
 let avatarPickerActive = false;
@@ -1869,6 +1884,10 @@ async function completeApprovedLogin(data, uv, sessionProof) {
   authScreen.classList.remove('active');
   homeScreen.classList.add('active');
   startUsageHeartbeat(); startOnlinePresence(); setupApprovedDirectorySubscription(); loadRecentChats(); loadMyProfile();
+  initMazenHiddenChatControls();
+  refreshMazenHiddenChatControls();
+  if (hiddenChatPollTimer) clearInterval(hiddenChatPollTimer);
+  hiddenChatPollTimer = setInterval(() => { refreshHiddenChatPartners().then(() => loadRecentChats()); }, 5000);
   setupAccountStatusListener(data.id); startAutoLock();
   if (bindRes?.justBound) setTimeout(() => toast('This device is now bound to your account', 'success', 4000), 800);
 }
@@ -2167,6 +2186,69 @@ function updatePinButtonIcon(friend) {
   }
 }
 
+// ═══════ Mazen hidden chats ═══════
+function isMazenAccount() { return String(currentUser || '').trim().toLowerCase() === 'mazen'; }
+function isHiddenChatPartner(friend) { return hiddenChatPartners.has(String(friend || '').trim().toLowerCase()); }
+async function refreshHiddenChatPartners() {
+  const c = getSupabase();
+  if (!c || !currentUser) { hiddenChatPartners = new Set(); return hiddenChatPartners; }
+  try {
+    const { data, error } = await c.rpc('get_hidden_chat_partners', { p_username: currentUser });
+    if (error) throw error;
+    hiddenChatPartners = new Set((data || []).map(row => String(row.username || '').trim().toLowerCase()).filter(Boolean));
+  } catch (error) { console.error('Hidden chat visibility could not be loaded:', error); }
+  return hiddenChatPartners;
+}
+function setMazenHiddenChatStatus(message, kind = 'info') {
+  const el = document.getElementById('mazen-hidden-chat-status'); if (!el) return;
+  el.textContent = message || '';
+  el.style.color = kind === 'error' ? '#ff707d' : kind === 'success' ? 'var(--success-color, #7ce3a1)' : 'var(--text-muted)';
+}
+function setSelectOptions(select, values, emptyLabel) {
+  if (!select) return;
+  select.innerHTML = '';
+  const empty = document.createElement('option'); empty.value = ''; empty.textContent = emptyLabel; select.appendChild(empty);
+  values.forEach(value => { const option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option); });
+}
+async function refreshMazenHiddenChatControls() {
+  const section = document.getElementById('mazen-hidden-chats-section'); if (!section) return;
+  if (!isMazenAccount()) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  const c = getSupabase(); if (!c) return;
+  await refreshHiddenChatPartners();
+  const { data } = await c.from('approved_user_directory').select('username').order('username').limit(500);
+  const all = (data || []).map(row => String(row.username || '').trim()).filter(name => name && name.toLowerCase() !== 'mazen');
+  const hidden = all.filter(name => isHiddenChatPartner(name));
+  setSelectOptions(document.getElementById('mazen-hide-chat-select'), all.filter(name => !isHiddenChatPartner(name)), 'Choose a person to hide');
+  setSelectOptions(document.getElementById('mazen-restore-chat-select'), hidden, hidden.length ? 'Choose a hidden chat' : 'No hidden chats');
+}
+async function hideMazenChat() {
+  if (!isMazenAccount()) return;
+  const target = document.getElementById('mazen-hide-chat-select')?.value || '';
+  if (!target) { setMazenHiddenChatStatus('Choose a person first.', 'error'); return; }
+  const c = getSupabase(); if (!c) return;
+  const { data, error } = await c.rpc('hide_private_chat', { p_actor: currentUser, p_target: target });
+  if (error || data !== true) { setMazenHiddenChatStatus(error?.message || 'Only Mazen can hide chats.', 'error'); return; }
+  await refreshHiddenChatPartners();
+  if (currentChatFriend && isHiddenChatPartner(currentChatFriend)) { currentChatFriend = ''; chatScreen.classList.remove('active'); homeScreen.classList.add('active'); }
+  await loadRecentChats(); await refreshMazenHiddenChatControls();
+  setMazenHiddenChatStatus(`Chat with ${target} is hidden for both accounts.`, 'success');
+}
+async function restoreMazenChat() {
+  if (!isMazenAccount()) return;
+  const target = document.getElementById('mazen-restore-chat-select')?.value || '';
+  if (!target) { setMazenHiddenChatStatus('Choose a hidden chat first.', 'error'); return; }
+  const c = getSupabase(); if (!c) return;
+  const { data, error } = await c.rpc('unhide_private_chat', { p_actor: currentUser, p_target: target });
+  if (error || data !== true) { setMazenHiddenChatStatus(error?.message || 'Only Mazen can restore chats.', 'error'); return; }
+  await refreshHiddenChatPartners(); await loadRecentChats(); await refreshMazenHiddenChatControls();
+  setMazenHiddenChatStatus(`Chat with ${target} is visible again for both accounts.`, 'success');
+}
+function initMazenHiddenChatControls() {
+  const hideBtn = document.getElementById('mazen-hide-chat-btn'), restoreBtn = document.getElementById('mazen-restore-chat-btn');
+  if (hideBtn && !hideBtn.dataset.bound) { hideBtn.dataset.bound = '1'; hideBtn.addEventListener('click', hideMazenChat); }
+  if (restoreBtn && !restoreBtn.dataset.bound) { restoreBtn.dataset.bound = '1'; restoreBtn.addEventListener('click', restoreMazenChat); }
+}
 // ═══════ Settings Drawer ═══════
 function openSettings() {
   const o = document.getElementById('settings-overlay');
@@ -2175,6 +2257,7 @@ function openSettings() {
   o.classList.add('show');
   d.classList.add('show');
   document.body.style.overflow = 'hidden';
+  refreshMazenHiddenChatControls();
 }
 function closeSettings() {
   const o = document.getElementById('settings-overlay');
@@ -2345,6 +2428,8 @@ async function logout() {
   });
   if (presenceChannel && c) { try { await c.removeChannel(presenceChannel); } catch(e){} }
   if (heartbeatInterval) clearInterval(heartbeatInterval);
+  if (hiddenChatPollTimer) clearInterval(hiddenChatPollTimer);
+  hiddenChatPollTimer = null;
   messageSubscription = userStatusSubscription = requestSubscription = approvedDirectorySubscription = pollVoteSubscription = presenceChannel = null;
   currentUser = ''; currentAccountData = null; currentChatFriend = '';
   unreadCounts = {}; msgCache.clear();
@@ -2713,6 +2798,8 @@ async function loadRecentChats() {
     if (m.sender !== currentUser) friends.add(m.sender);
     if (m.receiver !== currentUser) friends.add(m.receiver);
   });
+  await refreshHiddenChatPartners();
+  [...friends].forEach(friend => { if (isHiddenChatPartner(friend)) friends.delete(friend); });
   // Normalize names case-insensitively so directory/messages cannot create
   // two visual entries for the same contact (especially the default Mazen chat).
   const uniqueFriends = new Map();
@@ -2836,6 +2923,8 @@ async function startNewChat() {
 
 // ═══════ Open Chat ═══════
 async function openChat(fn) {
+  await refreshHiddenChatPartners();
+  if (isHiddenChatPartner(fn)) { toast('This chat is currently hidden.', 'error'); return; }
   if (isChatLocked(fn)) {
     const ok = await promptChatPin(fn);
     if (!ok) return;
