@@ -415,11 +415,13 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
   width:100%;
   min-width:0;
   box-sizing:border-box;
-  margin:0 0 7px;
-  padding:6px 9px;
+  flex:0 0 auto;
+  margin:0 0 9px;
+  padding:8px 10px;
+  border:1px solid var(--glass-border);
   border-inline-start:3px solid var(--accent-color);
-  border-radius:8px;
-  background:rgba(0,0,0,.14);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(0,0,0,.22),rgba(255,255,255,.035));
   color:inherit;
   text-align:right;
   direction:rtl;
@@ -439,23 +441,27 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
   text-overflow:ellipsis;
 }
 .quoted span {
-  display:block;
+  display:-webkit-box;
   min-width:0;
   max-width:100%;
   color:var(--text-muted);
   font-size:.74rem;
-  line-height:1.35;
-  white-space:nowrap;
+  line-height:1.4;
+  white-space:pre-wrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  overflow-wrap:anywhere;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
   direction:rtl;
 }
+.bubble:has(> .quoted) > .msg-meta { clear:both; }
 .quoted:hover { background:rgba(255,255,255,.1); }
 @media (max-width:420px) {
   .reply-bar { padding:7px 8px; gap:8px; border-radius:10px; }
   .reply-content b { font-size:.7rem; }
   .reply-content span { font-size:.74rem; }
-  .quoted { margin-bottom:6px; padding:5px 8px; }
+  .quoted { margin-bottom:8px; padding:7px 9px; }
 }
 .reply-cancel { background:transparent; border:0; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:4px; }
 #toast-container { position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); left:50%; transform:translateX(-50%); z-index:9998; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; max-width:92vw; width:max-content; }
