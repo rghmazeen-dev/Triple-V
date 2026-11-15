@@ -234,6 +234,30 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 .lang-option-check { opacity:.35; }
 .lang-option.active .lang-option-check { opacity:1; color:var(--accent-color); }
 @media (max-width:420px) { .settings-drawer { width:100vw; border-left:0; } }
+/* Settings refresh: same controls, new visual language. */
+.settings-overlay { background:radial-gradient(circle at 82% 18%,rgba(255,70,95,.16),transparent 34%),rgba(2,4,10,.78); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); transition:opacity .28s ease,visibility .28s ease; }
+.settings-drawer { width:min(430px,94vw); background:linear-gradient(160deg,color-mix(in srgb,var(--bg-main) 92%,#29101b),var(--bg-main) 54%,#080b12); border-left:1px solid rgba(255,255,255,.12); box-shadow:-24px 0 70px rgba(0,0,0,.55),0 0 70px rgba(255,45,80,.08); transform:translateX(108%) scale(.98); transform-origin:right center; transition:transform .32s cubic-bezier(.22,1,.36,1),visibility .32s ease; }
+.settings-drawer.show { transform:translateX(0) scale(1); }
+.settings-drawer-head { min-height:106px; padding:18px 18px 16px; align-items:flex-start; background:linear-gradient(135deg,rgba(255,55,84,.14),rgba(255,255,255,.025) 55%,transparent); border-bottom:1px solid rgba(255,255,255,.1); }
+.settings-head-copy { min-width:0; }
+.settings-head-kicker { display:flex; align-items:center; gap:6px; color:var(--accent-color); font-size:.62rem; font-weight:900; letter-spacing:.14em; }
+.settings-head-copy h3 { margin:6px 0 2px; font-size:1.35rem; letter-spacing:-.03em; }
+.settings-head-copy p { color:var(--text-muted); font-size:.72rem; margin:0; }
+.settings-head-actions { display:flex; align-items:center; gap:7px; }
+.settings-theme-shortcut, .settings-drawer-close { width:38px; height:38px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.1); border-radius:13px; background:rgba(255,255,255,.055); color:var(--text-muted); cursor:pointer; transition:transform .2s ease,background .2s ease,color .2s ease,border-color .2s ease; }
+.settings-theme-shortcut:hover, .settings-drawer-close:hover { transform:translateY(-2px); color:var(--accent-color); background:rgba(255,255,255,.1); border-color:color-mix(in srgb,var(--accent-color) 48%,transparent); }
+.settings-drawer-body { padding:14px; background:linear-gradient(180deg,rgba(255,255,255,.018),transparent 28%); }
+.settings-section { position:relative; margin-bottom:10px; border:1px solid rgba(255,255,255,.085); border-radius:18px; background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.025)); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; transition:transform .2s ease,border-color .2s ease,background .2s ease; animation:settingsCardIn .42s both; }
+.settings-section:nth-child(2){animation-delay:.025s}.settings-section:nth-child(3){animation-delay:.05s}.settings-section:nth-child(4){animation-delay:.075s}.settings-section:nth-child(5){animation-delay:.1s}
+.settings-section:hover { transform:translateY(-1px); border-color:color-mix(in srgb,var(--accent-color) 30%,transparent); background:linear-gradient(135deg,rgba(255,255,255,.09),rgba(255,255,255,.03)); }
+.settings-section-header { min-height:58px; padding:13px 15px; font-size:.9rem; letter-spacing:.01em; }
+.settings-section-header:before { content:'✦'; color:var(--accent-color); font-size:.75rem; margin-inline-end:9px; opacity:.8; }
+.settings-section-arrow { font-size:.78rem; }
+.settings-section-body { padding:2px 14px 14px; animation:settingsBodyIn .24s ease both; }
+@keyframes settingsCardIn { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:translateX(0); } }
+@keyframes settingsBodyIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:420px) { .settings-drawer { width:100vw; } .settings-drawer-head { padding-inline:15px; } }
+
 .chat-box { flex:1 1 auto; min-height:0; height:0; box-sizing:border-box; padding:16px 14px calc(var(--composer-height,70px) + var(--keyboard-content-inset,0px) + var(--bottom-nav-space,0px) + env(safe-area-inset-bottom) + 12px); overflow-y:auto; display:flex; flex-direction:column; overscroll-behavior:contain; background:var(--chat-bg); gap:4px; -webkit-overflow-scrolling:touch; position:relative; scroll-behavior:auto; overflow-anchor:none; touch-action:pan-y; }
 .chat-box::before { content:''; flex:1 1 auto; min-height:0; order:-1; pointer-events:none; }
 .msg-group { display:flex; flex-direction:column; margin-bottom:4px; width:fit-content; max-width:78%; position:relative; min-width:0; align-self:flex-start; touch-action:pan-y; }
@@ -822,8 +846,15 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 <div class="settings-overlay" id="settings-overlay"></div>
 <div class="settings-drawer" id="settings-drawer">
   <div class="settings-drawer-head">
-    <h3>Settings</h3>
-    <i class="fa-solid fa-xmark settings-drawer-close" id="close-settings-btn"></i>
+    <div class="settings-head-copy">
+      <span class="settings-head-kicker"><i class="fa-solid fa-sliders"></i> CONTROL CENTER</span>
+      <h3>Settings</h3>
+      <p>Make your chat feel like yours.</p>
+    </div>
+    <div class="settings-head-actions">
+      <button type="button" class="theme-btn settings-theme-shortcut theme-toggle-btn" title="Change theme" aria-label="Change theme"><i class="fa-solid fa-palette theme-icon"></i></button>
+      <button type="button" class="settings-drawer-close" id="close-settings-btn" aria-label="Close settings"><i class="fa-solid fa-xmark"></i></button>
+    </div>
   </div>
   <div class="settings-drawer-body">
     <div class="settings-section">
@@ -2451,7 +2482,7 @@ function syncBottomNav() {
   const auth = document.getElementById('auth-screen');
   const home = document.getElementById('home-screen');
   const chat = document.getElementById('chat-screen');
-  const visible = !!auth && !auth.classList.contains('active') && (home?.classList.contains('active') || chat?.classList.contains('active'));
+  const visible = !!auth && !auth.classList.contains('active') && !!home?.classList.contains('active') && !chat?.classList.contains('active');
   nav.classList.toggle('show', visible);
   document.body.classList.toggle('bottom-nav-visible', visible);
   nav.querySelectorAll('[data-bottom-nav]').forEach(item => item.classList.toggle('active', item.dataset.bottomNav === 'chatting' && document.getElementById('chat-screen')?.classList.contains('active')));
