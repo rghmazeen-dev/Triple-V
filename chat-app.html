@@ -1404,6 +1404,8 @@ let currentAccountData = null;
 let currentAuthProof = ''; // short-lived proof issued only after the security-question challenge
 let avatarPickerActive = false;
 let avatarPickerWasHidden = false;
+let chatFilePickerActive = false;
+let chatFilePickerWasHidden = false;
 let avatarUploadActive = false;
 let currentChatFriend = '';
 let recentChatsLoadToken = 0;
@@ -2162,7 +2164,7 @@ function pauseAutoLockForAvatarFlow() {
   if (ov) { ov.classList.remove('show'); ov.classList.remove('locked'); }
 }
 function resumeAutoLockAfterAvatarFlow() {
-  if (!avatarPickerActive && !avatarUploadActive && _autoLockActive && currentUser) resetAutoLockTimer();
+  if (!avatarPickerActive && !avatarUploadActive && !chatFilePickerActive && _autoLockActive && currentUser) resetAutoLockTimer();
 }
 function finishAvatarPicker() {
   avatarPickerActive = false;
@@ -4202,9 +4204,20 @@ function toggleAttachmentMenu(e) {
   m.classList.toggle('show', s);
   if (s) closeThemePicker();
 }
+function startChatFilePicker() {
+  chatFilePickerActive = true;
+  chatFilePickerWasHidden = false;
+  pauseAutoLockForAvatarFlow();
+}
+function finishChatFilePicker() {
+  chatFilePickerActive = false;
+  chatFilePickerWasHidden = false;
+  resumeAutoLockAfterAvatarFlow();
+}
 function openFilePicker(id) {
   const i = document.getElementById(id);
   if (!i) return;
+  startChatFilePicker();
   i.value = '';
   i.click();
 }
@@ -4951,6 +4964,10 @@ document.addEventListener('click', e => {
 
 // ═══════ File Inputs Change ═══════
 const profileAvatarPickerInput = document.getElementById('profile-avatar-input');
+['documents-input','camera-input','gallery-input','multi-input'].forEach(id => {
+  const input = document.getElementById(id);
+  input?.addEventListener('cancel', finishChatFilePicker);
+});
 profileAvatarPickerInput?.addEventListener('click', () => {
   avatarPickerActive = true;
   avatarPickerWasHidden = false;
@@ -4967,18 +4984,26 @@ document.addEventListener('change', e => {
   if (e.target.id === 'documents-input') {
     const f = e.target.files?.[0];
     if (f) uploadAndSendFile(f);
+    finishChatFilePicker();
+    e.target.value = '';
   }
   if (e.target.id === 'camera-input') {
     const f = e.target.files?.[0];
     if (f) uploadAndSendFile(f);
+    finishChatFilePicker();
+    e.target.value = '';
   }
   if (e.target.id === 'gallery-input') {
     const f = e.target.files?.[0];
     if (f) uploadAndSendFile(f);
+    finishChatFilePicker();
+    e.target.value = '';
   }
   if (e.target.id === 'multi-input') {
     const files = e.target.files;
     if (files && files.length) uploadMultipleFiles(Array.from(files));
+    finishChatFilePicker();
+    e.target.value = '';
   }
 });
 
@@ -5034,29 +5059,34 @@ function returnToLabX() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && avatarPickerActive) {
     avatarPickerWasHidden = true;
+  } else if (document.visibilityState === 'hidden' && chatFilePickerActive) {
+    chatFilePickerWasHidden = true;
   } else if (document.visibilityState === 'visible' && avatarPickerActive && avatarPickerWasHidden) {
     finishAvatarPicker();
-  } else if (document.visibilityState === 'hidden' && !avatarPickerActive && !avatarUploadActive) {
+  } else if (document.visibilityState === 'visible' && chatFilePickerActive && chatFilePickerWasHidden) {
+    finishChatFilePicker();
+  } else if (document.visibilityState === 'hidden' && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     returnToLabX();
-  } else if (document.visibilityState === 'visible' && labReturnPending && !avatarPickerActive && !avatarUploadActive) {
+  } else if (document.visibilityState === 'visible' && labReturnPending && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     returnToLabX();
   }
 }, { passive:true });
 
 // Leaving the browser/app must never restore the chat from bfcache.
 window.addEventListener('pagehide', () => {
-  if (!avatarPickerActive && !avatarUploadActive) {
+  if (!avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     labReturnPending = true;
     if (currentUser) { try { lockAppNow(); } catch(e) {} }
   }
 }, { passive:true });
-window.addEventListener('beforeunload', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive) { try { lockAppNow(); } catch(e) {} } });
+window.addEventListener('beforeunload', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) { try { lockAppNow(); } catch(e) {} } });
 window.addEventListener('pageshow', event => {
-  if ((event.persisted || labReturnPending) && !avatarPickerActive && !avatarUploadActive) returnToLabX();
+  if ((event.persisted || labReturnPending) && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) returnToLabX();
 }, { passive:true });
 window.addEventListener('focus', () => {
   if (avatarPickerActive && avatarPickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishAvatarPicker, 150);
-  else if (labReturnPending && document.visibilityState !== 'hidden' && !avatarUploadActive) returnToLabX();
+  else if (chatFilePickerActive && chatFilePickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishChatFilePicker, 150);
+  else if (labReturnPending && document.visibilityState !== 'hidden' && !avatarUploadActive && !chatFilePickerActive) returnToLabX();
 }, { passive:true });
 
 // ═══════ Render Font Options ═══════
