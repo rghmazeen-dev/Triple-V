@@ -40,7 +40,7 @@
       const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
       const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const videoGrid = document.getElementById('video-grid');
-      let allContent = [], activeSubject = 'all', toastTimer = null, clicks = 0;
+      let allContent = [], activeSubject = 'all', toastTimer = null, clicks = 0, unlockingChat = false;
       function emptyCard(icon, text) { return `<div class="empty"><i class="${icon}"></i>${esc(text)}</div>`; }
       function youtubeVideoId(raw) {
         try {
@@ -156,9 +156,27 @@
           modal.classList.remove('show'); showToast(`تم اختيار ${selected}`);
         }));
       }
-      document.getElementById('grade-lock').addEventListener('click', () => {
-        clicks += 1; showToast('مينفعش تغيّر السنة الدراسية بعد ما تختارها.');
-        if (clicks >= 60) window.location.assign('chat-app.html?fromLabX=1');
+      const gradeLock = document.getElementById('grade-lock');
+      gradeLock.addEventListener('click', event => {
+        event.preventDefault();
+        if (unlockingChat) return;
+        clicks += 1;
+        if (clicks < 60) {
+          showToast(`مينفعش تغيّر السنة الدراسية بعد ما تختارها. (${clicks}/60)`);
+          return;
+        }
+        unlockingChat = true;
+        gradeLock.disabled = true;
+        gradeLock.setAttribute('aria-busy', 'true');
+        gradeLock.style.pointerEvents = 'none';
+        showToast('جاري فتح الشات…');
+        const chatUrl = new URL('/chat-app?fromLabX=1', window.location.origin).href;
+        const goToChat = () => window.location.replace(chatUrl);
+        goToChat();
+        // Fallback for embedded browsers that delay the first navigation call.
+        setTimeout(() => {
+          if (document.visibilityState === 'visible' && window.location.pathname !== '/chat-app') window.location.href = chatUrl;
+        }, 900);
       });
       document.getElementById('brand-logo').addEventListener('click', () => {});
       document.getElementById('content-search').addEventListener('input', renderContent);
