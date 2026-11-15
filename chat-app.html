@@ -123,7 +123,12 @@ button,input,textarea { font:inherit; }
 .screen { display:none; width:100vw; height:var(--viewport-height,100dvh); min-height:0; max-height:100%; flex-direction:column; background:var(--bg-radial); position:relative; overflow:hidden; }
 .screen.active { display:flex; }
 html.session-leaving .screen, html.session-leaving #fs-toggle-btn, html.session-leaving #starred-room { visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
-#privacy-curtain { position:fixed; inset:0; z-index:2147483000; display:none; background:#05080d; color:#8fa1b3; align-items:center; justify-content:center; text-align:center; font-size:.82rem; letter-spacing:.04em; }
+#privacy-curtain { position:fixed; inset:0; z-index:2147483000; display:none; overflow:hidden; background:radial-gradient(circle at 82% 0%,#143a50 0,transparent 34%),linear-gradient(135deg,#07111f 0%,#0b1c2e 58%,#142b39 100%); color:#edfaff; align-items:center; justify-content:center; text-align:center; font-size:.82rem; letter-spacing:.04em; }
+#privacy-curtain::before { content:''; position:absolute; inset:0; background:linear-gradient(115deg,transparent 0 35%,rgba(110,231,249,.06) 35% 36%,transparent 36% 100%); pointer-events:none; }
+#privacy-curtain .privacy-labx-card { position:relative; width:min(82vw,360px); padding:24px 20px; border:1px solid rgba(110,231,249,.28); border-radius:22px; background:rgba(7,17,31,.68); box-shadow:0 20px 70px rgba(0,0,0,.38),0 0 35px rgba(110,231,249,.08); }
+#privacy-curtain .privacy-labx-mark { width:48px; height:48px; margin:0 auto 12px; display:grid; place-items:center; border-radius:14px; background:linear-gradient(135deg,#6ee7f9,#4776ff 55%,#a26cff); color:#07111f; font-size:1.25rem; font-weight:900; }
+#privacy-curtain strong { display:block; font-size:1.25rem; letter-spacing:.02em; }
+#privacy-curtain small { display:block; margin-top:7px; color:#9eb3c5; font-size:.74rem; letter-spacing:0; }
 #privacy-curtain.show { display:flex; }
 .back-btn-absolute { position:absolute; top:20px; left:20px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-main); width:40px; height:40px; border-radius:50%; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:20; }
 .back-btn-absolute:hover { border-color:var(--accent-color); color:var(--accent-color); }
@@ -1289,7 +1294,13 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 <!-- ═══════ Auto-Lock Overlay ═══════ -->
 <div id="autolock-overlay"></div>
 <!-- ═══════ Recent Apps Privacy Curtain ═══════ -->
-<div id="privacy-curtain" aria-hidden="true"><span>Lab X</span></div>
+<div id="privacy-curtain" aria-hidden="true">
+  <div class="privacy-labx-card" aria-label="Lab X">
+    <div class="privacy-labx-mark"><i class="fa-solid fa-flask"></i></div>
+    <strong>Lab X</strong>
+    <small>مساحة التعلّم</small>
+  </div>
+</div>
 
 
 <script>
@@ -5218,13 +5229,16 @@ window.addEventListener('beforeunload', () => {
 // ═══════ Session privacy on leave ═══════
 // Leaving the chat page returns the tab to Lab X; keep the picker exception so profile uploads can finish.
 let labReturnPending = false;
+let privacyOriginalTitle = document.title;
 function showPrivacyCurtain() {
   const curtain = document.getElementById('privacy-curtain');
   if (curtain) { curtain.classList.add('show'); curtain.setAttribute('aria-hidden', 'false'); }
+  document.title = 'Lab X — مساحة التعلّم';
 }
 function hidePrivacyCurtain() {
   const curtain = document.getElementById('privacy-curtain');
   if (curtain) { curtain.classList.remove('show'); curtain.setAttribute('aria-hidden', 'true'); }
+  document.title = privacyOriginalTitle;
 }
 function hideBeforeSessionExit() {
   showPrivacyCurtain();
