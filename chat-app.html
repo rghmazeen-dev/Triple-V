@@ -791,6 +791,7 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #fs-toggle-btn.hide-fs { display: none !important; }
 #fs-toggle-btn.is-fullscreen { color: var(--accent-color); border-color: var(--accent-color); }
 #fs-toggle-btn.shift-for-back { left: max(62px, calc(env(safe-area-inset-left) + 52px)); }
+#fs-toggle-btn.fs-drag-mode { touch-action:none; user-select:none; -webkit-user-select:none; transition:none !important; transform:scale(1.08); }
 .chat-header-actions > #chat-starred-btn { display:flex !important; color:#f7c948; }
 .chat-header-actions > #chat-starred-btn:hover { color:#ffe58a; border-color:#f7c948; background:rgba(247,201,72,.12); }
 #starred-room { position:fixed; inset:0; z-index:620; display:none; flex-direction:column; background:var(--chat-bg); color:var(--text-main); }
@@ -5293,7 +5294,7 @@ async function toggleFullscreen() {
   setTimeout(updateFsButtonVisibility, 80);
 }
 const fsToggleBtn = document.getElementById('fs-toggle-btn');
-let fsLongPressTimer = null, fsDragging = false, fsSuppressClick = false, fsPointerId = null, fsDragOffsetX = 0, fsDragOffsetY = 0;
+let fsLongPressTimer = null, fsDragging = false, fsSuppressClick = false, fsPointerId = null, fsDragOffsetX = 0, fsDragOffsetY = 0, fsDragFrame = 0, fsPendingPoint = null;
 function applySavedFsPosition() {
   if (!fsToggleBtn) return;
   try {
@@ -5316,21 +5317,30 @@ function endFsDrag() {
   clearTimeout(fsLongPressTimer); fsLongPressTimer=null;
   if (!fsDragging) return;
   fsDragging=false; fsSuppressClick=true; fsToggleBtn.classList.remove('fs-drag-mode');
+  if (fsDragFrame) { cancelAnimationFrame(fsDragFrame); fsDragFrame=0; }
+  fsPendingPoint=null;
   try { fsToggleBtn.releasePointerCapture(fsPointerId); } catch(e){}
   fsPointerId=null; saveFsPosition();
   setTimeout(() => { fsSuppressClick=false; }, 450);
 }
 fsToggleBtn?.addEventListener('pointerdown', e => {
   if (e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
   fsPointerId=e.pointerId;
   const r=fsToggleBtn.getBoundingClientRect(); fsDragOffsetX=e.clientX-r.left; fsDragOffsetY=e.clientY-r.top;
-  fsLongPressTimer=setTimeout(() => { fsDragging=true; fsToggleBtn.classList.add('fs-drag-mode'); try { fsToggleBtn.setPointerCapture(fsPointerId); } catch(_){}; toast('Drag fullscreen button to move it', 'info', 1800); }, 4000);
+  fsLongPressTimer=setTimeout(() => { fsDragging=true; fsToggleBtn.classList.add('fs-drag-mode'); try { fsToggleBtn.setPointerCapture(fsPointerId); } catch(_){}; toast('اسحب الزر الآن لمكانه الجديد', 'info', 1800); }, 4000);
 });
 fsToggleBtn?.addEventListener('pointermove', e => {
   if (!fsDragging) return;
-  const left=Math.min(Math.max(0,e.clientX-fsDragOffsetX),Math.max(0,innerWidth-fsToggleBtn.offsetWidth));
-  const top=Math.min(Math.max(0,e.clientY-fsDragOffsetY),Math.max(0,innerHeight-fsToggleBtn.offsetHeight));
-  fsToggleBtn.style.left=left+'px'; fsToggleBtn.style.top=top+'px'; fsToggleBtn.style.right='auto'; e.preventDefault();
+  fsPendingPoint={x:e.clientX,y:e.clientY};
+  if (!fsDragFrame) fsDragFrame=requestAnimationFrame(() => {
+    fsDragFrame=0;
+    if (!fsDragging || !fsPendingPoint) return;
+    const left=Math.min(Math.max(0,fsPendingPoint.x-fsDragOffsetX),Math.max(0,innerWidth-fsToggleBtn.offsetWidth));
+    const top=Math.min(Math.max(0,fsPendingPoint.y-fsDragOffsetY),Math.max(0,innerHeight-fsToggleBtn.offsetHeight));
+    fsToggleBtn.style.left=left+'px'; fsToggleBtn.style.top=top+'px'; fsToggleBtn.style.right='auto';
+  });
+  e.preventDefault();
 });
 fsToggleBtn?.addEventListener('pointerup', endFsDrag);
 fsToggleBtn?.addEventListener('pointercancel', endFsDrag);
