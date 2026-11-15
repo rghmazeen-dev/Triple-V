@@ -574,6 +574,17 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #pinned-bar .unpin-btn { flex:0 0 auto; background:transparent; border:0; color:var(--text-muted); cursor:pointer; padding:5px; font-size:.95rem; }
 #pinned-bar .unpin-btn:hover { color:var(--accent-color); }
 .msg-group.pinned .bubble::after, .msg-group.pinned .media-content::after { content:''; position:absolute; top:4px; inset-inline-end:4px; width:8px; height:8px; background:var(--accent-color); border-radius:50%; box-shadow:0 0 6px var(--accent-color); }
+.star-badge { display:none; position:absolute; inset-inline-end:-5px; bottom:2px; width:18px; height:18px; align-items:center; justify-content:center; border-radius:50%; background:var(--card-bg); color:#f7c948; border:1px solid rgba(247,201,72,.45); box-shadow:0 3px 10px rgba(0,0,0,.3); font-size:.58rem; z-index:3; }
+.msg-group.starred .star-badge { display:flex; animation:starPop .22s ease-out; }
+@keyframes starPop { from { transform:scale(.4) rotate(-20deg); opacity:0; } to { transform:scale(1) rotate(0); opacity:1; } }
+.starred-message-list { display:flex; flex-direction:column; gap:8px; max-height:330px; overflow:auto; }
+.starred-message-item { width:100%; border:1px solid var(--glass-border); border-radius:13px; padding:10px 11px; background:rgba(255,255,255,.035); color:var(--text-main); text-align:start; cursor:pointer; transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+.starred-message-item:hover { transform:translateY(-1px); border-color:rgba(247,201,72,.55); background:rgba(247,201,72,.08); }
+.starred-message-item strong { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.78rem; }
+.starred-message-item strong i { color:#f7c948; }
+.starred-message-item small { display:block; margin-top:5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.72rem; }
+.starred-message-item time { color:var(--text-muted); font-size:.64rem; font-weight:500; }
+
 .edited-badge { font-size:.62rem; font-style:italic; opacity:.75; margin-inline-start:3px; color:var(--text-muted); }
 .msg-group.me .edited-badge { color:rgba(255,255,255,.7); }
 .draft-indicator { color:#ef4444 !important; font-weight:700; }
@@ -878,6 +889,14 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
         </div>
       </div>
     </div>
+    <div class="settings-section">
+      <button type="button" class="settings-section-header" data-toggle-section="starred-messages-section-body">
+        <span><i class="fa-solid fa-star" style="color:#f7c948;margin-inline-end:6px;"></i> Starred Messages</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
+      </button>
+      <div class="settings-section-body" id="starred-messages-section-body">
+        <div id="starred-messages-list" class="starred-message-list"><div class="profile-save-status">Loading starred messages...</div></div>
+      </div>
+    </div>
     <div class="settings-section" id="mazen-hidden-chats-section" style="display:none;">
       <button type="button" class="settings-section-header" data-toggle-section="mazen-hidden-chats-section-body">
         <span>Hidden chats</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
@@ -1125,6 +1144,7 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
     <div class="reactions-row" id="reactions-row"></div>
     <button type="button" class="action-item" id="act-reply"><i class="fa-solid fa-reply"></i><span>Reply</span></button>
     <button type="button" class="action-item" id="act-pin"><i class="fa-solid fa-thumbtack"></i><span>Pin Message</span></button>
+    <button type="button" class="action-item" id="act-star"><i class="fa-regular fa-star"></i><span>Star Message</span></button>
     <button type="button" class="action-item" id="act-edit" style="display:none;"><i class="fa-solid fa-pen"></i><span>Edit</span></button>
     <button type="button" class="action-item" id="act-copy"><i class="fa-regular fa-copy"></i><span>Copy text</span></button>
     <button type="button" class="action-item" id="act-custom-bg" style="display:none;"><i class="fa-solid fa-image"></i><span>Set Chat Background</span></button>
@@ -2467,6 +2487,7 @@ function openSettings() {
   d.classList.add('show');
   document.body.style.overflow = 'hidden';
   refreshMazenHiddenChatControls();
+  if (typeof loadStarredMessages === 'function') loadStarredMessages();
 }
 function closeSettings() {
   const o = document.getElementById('settings-overlay');
@@ -3444,7 +3465,8 @@ function buildMessageGroup(msg) {
   const bom = isMedia
     ? `<div class="media-content" data-raw-content="${escapeHtml(msg.content || '')}">${mediaSenderNameMarkup}${renderMessageContent(msg)}</div><span class="msg-time">${ts}${editedTag}${ticks}</span>`
     : `<div class="bubble" data-raw-content="${escapeHtml(msg.content || '')}">${senderNameMarkup}${renderMessageContent(msg)}<span class="msg-meta">${ts}${editedTag}${ticks}</span></div>`;
-  group.innerHTML = `${bom}<div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
+  group.innerHTML = `${bom}<span class="star-badge" title="Starred"><i class="fa-solid fa-star"></i></span><div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div><div class="reaction-badge" id="reactions-${msg.id}"></div>`;
+  group.classList.toggle('starred', !!window.__starredMessageIds?.has(String(msg.id)));
   group.querySelectorAll('[data-poll-option]').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault(); e.stopPropagation();
@@ -3833,6 +3855,44 @@ window.addEventListener('online', () => {
 
 // ═══════ Message Actions ═══════
 const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+const starredMessageIds = window.__starredMessageIds || (window.__starredMessageIds = new Set());
+
+function syncStarMarker(mid) {
+  const group = chatBox.querySelector(`.msg-group[data-message-id="${CSS.escape(String(mid))}"]`);
+  if (group) group.classList.toggle('starred', starredMessageIds.has(String(mid)));
+}
+async function loadStarredMessages() {
+  const list = document.getElementById('starred-messages-list');
+  const c = getSupabase();
+  if (!c || !currentUser) { if (list) list.innerHTML = '<div class="profile-save-status">Sign in to view starred messages.</div>'; return; }
+  const { data, error } = await c.from('message_stars').select('id,message_id,sender,receiver,snippet,created_at').eq('username', currentUser).order('created_at', { ascending:false }).limit(100);
+  if (error) { if (list) list.innerHTML = '<div class="profile-save-status">Could not load starred messages.</div>'; return; }
+  starredMessageIds.clear();
+  (data || []).forEach(row => starredMessageIds.add(String(row.message_id)));
+  document.querySelectorAll('.msg-group[data-message-id]').forEach(g => g.classList.toggle('starred', starredMessageIds.has(String(g.dataset.messageId))));
+  if (!list) return;
+  if (!data?.length) { list.innerHTML = '<div class="profile-save-status">No starred messages yet.</div>'; return; }
+  list.innerHTML = data.map(row => {
+    const friend = String(row.sender).toLowerCase() === String(currentUser).toLowerCase() ? row.receiver : row.sender;
+    return `<button type="button" class="starred-message-item" data-star-friend="${escapeHtml(friend)}" data-star-message="${escapeHtml(String(row.message_id))}"><strong><span><i class="fa-solid fa-star"></i> ${escapeHtml(friend)}</span><time>${new Date(row.created_at).toLocaleString()}</time></strong><small>${escapeHtml(row.snippet || 'Starred message')}</small></button>`;
+  }).join('');
+}
+async function toggleStarMessage(mid) {
+  const c = getSupabase(); if (!c || !currentUser) return;
+  const key = String(mid);
+  if (starredMessageIds.has(key)) {
+    const { error } = await c.from('message_stars').delete().eq('username', currentUser).eq('message_id', mid);
+    if (error) { toast('Could not remove star', 'error'); return; }
+    starredMessageIds.delete(key); syncStarMarker(mid); toast('Star removed', 'success');
+  } else {
+    const msg = msgCache.get(key); if (!msg) return;
+    const { error } = await c.from('message_stars').upsert([{ username:currentUser, message_id:mid, sender:msg.sender, receiver:msg.receiver, snippet:buildSnippet(msg, 120) }], { onConflict:'username,message_id' });
+    if (error) { toast('Could not star message', 'error'); return; }
+    starredMessageIds.add(key); syncStarMarker(mid); toast('Message starred', 'success');
+  }
+  const listBody = document.getElementById('starred-messages-section-body');
+  if (listBody?.classList.contains('show')) loadStarredMessages();
+}
 
 function openMsgActions(group) {
   if (!group) return;
@@ -3847,6 +3907,8 @@ function openMsgActions(group) {
   const p = getMessagePayload({ content: raw });
   const copyBtn = document.getElementById('act-copy');
   if (copyBtn) copyBtn.style.display = 'none';
+  const starBtn = document.getElementById('act-star');
+  if (starBtn) starBtn.innerHTML = starredMessageIds.has(String(mid)) ? '<i class="fa-solid fa-star"></i><span>Unstar Message</span>' : '<i class="fa-regular fa-star"></i><span>Star Message</span>';
   if (editBtn) {
     let canEdit = false;
     if (isMine && p.type === 'text' && msg && msg.created_at) {
@@ -3996,10 +4058,17 @@ function attachSwipeToReply(group) {
   group.addEventListener('touchcancel', reset, { passive: true });
 }
 
-// ═══════ Pin Message ═══════
+// ═══════ Pin Message + History ═══════
+async function recordPinHistory(action, row) {
+  const c = getSupabase();
+  if (!c || !row || !currentUser) return;
+  await c.from('chat_pin_history').insert([{ actor:currentUser, user_a:row.user_a, user_b:row.user_b, message_id:String(row.message_id), snippet:row.snippet || '', action }]);
+}
 async function pinMessage(mid) {
   const c = getSupabase(); if (!c || !currentUser || !currentChatFriend) return;
   try {
+    const { data:oldPins } = await c.from('chat_pins').select('user_a,user_b,message_id,snippet').or(`and(user_a.eq.${currentUser},user_b.eq.${currentChatFriend}),and(user_a.eq.${currentChatFriend},user_b.eq.${currentUser})`).limit(10);
+    for (const oldPin of (oldPins || [])) await recordPinHistory('unpinned', oldPin);
     await c.from('chat_pins').delete().eq('user_a', currentUser).eq('user_b', currentChatFriend);
     await c.from('chat_pins').delete().eq('user_a', currentChatFriend).eq('user_b', currentUser);
   } catch(e){}
@@ -4007,6 +4076,7 @@ async function pinMessage(mid) {
   const snippet = msg ? buildSnippet(msg, 80) : '';
   const { error } = await c.from('chat_pins').insert([{ user_a: currentUser, user_b: currentChatFriend, message_id: mid, snippet }]);
   if (error) { toast('Pin failed', 'error'); return; }
+  await recordPinHistory('pinned', { user_a:currentUser, user_b:currentChatFriend, message_id:mid, snippet });
   pinnedMessageId = mid;
   chatBox.querySelectorAll('.msg-group.pinned').forEach(g => g.classList.remove('pinned'));
   const g = chatBox.querySelector(`.msg-group[data-message-id="${CSS.escape(String(mid))}"]`);
@@ -4017,6 +4087,8 @@ async function pinMessage(mid) {
 async function unpinMessage() {
   const c = getSupabase(); if (!c || !currentUser || !currentChatFriend) return;
   try {
+    const { data:oldPins } = await c.from('chat_pins').select('user_a,user_b,message_id,snippet').or(`and(user_a.eq.${currentUser},user_b.eq.${currentChatFriend}),and(user_a.eq.${currentChatFriend},user_b.eq.${currentUser})`).limit(10);
+    for (const oldPin of (oldPins || [])) await recordPinHistory('unpinned', oldPin);
     await c.from('chat_pins').delete().eq('user_a', currentUser).eq('user_b', currentChatFriend);
     await c.from('chat_pins').delete().eq('user_a', currentChatFriend).eq('user_b', currentUser);
   } catch(e){}
@@ -4809,6 +4881,7 @@ document.addEventListener('click', e => {
     h.classList.toggle('open');
     const b = document.getElementById(h.dataset.toggleSection);
     if (b) b.classList.toggle('show');
+    if (h.dataset.toggleSection === 'starred-messages-section-body' && b?.classList.contains('show')) loadStarredMessages();
     return;
   }
   if (t.closest('#profile-save-btn')) { saveProfile(); return; }
@@ -4873,6 +4946,20 @@ document.addEventListener('click', e => {
     const id = actionTargetId;
     closeMsgActions();
     if (id) pinMessage(id);
+    return;
+  }
+  if (t.closest('#act-star')) {
+    const id = actionTargetId;
+    closeMsgActions();
+    if (id) toggleStarMessage(id);
+    return;
+  }
+  if (t.closest('.starred-message-item')) {
+    const item = t.closest('.starred-message-item');
+    const friend = item.dataset.starFriend;
+    const mid = item.dataset.starMessage;
+    closeSettings();
+    if (friend) openChat(friend).then(() => setTimeout(() => { const g = chatBox.querySelector(`.msg-group[data-message-id="${CSS.escape(String(mid))}"]`); if (g) { g.scrollIntoView({block:'center',behavior:'smooth'}); g.classList.add('flash'); setTimeout(() => g.classList.remove('flash'), 1000); } }, 500));
     return;
   }
   if (t.closest('#act-edit')) {
