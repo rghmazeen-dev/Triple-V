@@ -123,6 +123,8 @@ button,input,textarea { font:inherit; }
 .screen { display:none; width:100vw; height:var(--viewport-height,100dvh); min-height:0; max-height:100%; flex-direction:column; background:var(--bg-radial); position:relative; overflow:hidden; }
 .screen.active { display:flex; }
 html.session-leaving .screen, html.session-leaving #fs-toggle-btn, html.session-leaving #starred-room { visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
+#privacy-curtain { position:fixed; inset:0; z-index:2147483000; display:none; background:#05080d; color:#8fa1b3; align-items:center; justify-content:center; text-align:center; font-size:.82rem; letter-spacing:.04em; }
+#privacy-curtain.show { display:flex; }
 .back-btn-absolute { position:absolute; top:20px; left:20px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-main); width:40px; height:40px; border-radius:50%; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:20; }
 .back-btn-absolute:hover { border-color:var(--accent-color); color:var(--accent-color); }
 .auth-container { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; }
@@ -1286,6 +1288,8 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
 
 <!-- ═══════ Auto-Lock Overlay ═══════ -->
 <div id="autolock-overlay"></div>
+<!-- ═══════ Recent Apps Privacy Curtain ═══════ -->
+<div id="privacy-curtain" aria-hidden="true"><span>Lab X</span></div>
 
 
 <script>
@@ -5214,7 +5218,16 @@ window.addEventListener('beforeunload', () => {
 // ═══════ Session privacy on leave ═══════
 // Leaving the chat page returns the tab to Lab X; keep the picker exception so profile uploads can finish.
 let labReturnPending = false;
+function showPrivacyCurtain() {
+  const curtain = document.getElementById('privacy-curtain');
+  if (curtain) { curtain.classList.add('show'); curtain.setAttribute('aria-hidden', 'false'); }
+}
+function hidePrivacyCurtain() {
+  const curtain = document.getElementById('privacy-curtain');
+  if (curtain) { curtain.classList.remove('show'); curtain.setAttribute('aria-hidden', 'true'); }
+}
 function hideBeforeSessionExit() {
+  showPrivacyCurtain();
   document.documentElement.classList.add('session-leaving');
 }
 function returnToLabX() {
@@ -5242,6 +5255,13 @@ document.addEventListener('visibilitychange', () => {
   } else if (document.visibilityState === 'visible' && labReturnPending && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     returnToLabX();
   }
+}, { passive:true });
+
+window.addEventListener('blur', () => {
+  if (document.visibilityState === 'hidden' && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) hideBeforeSessionExit();
+}, { passive:true });
+window.addEventListener('freeze', () => {
+  if (!avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) hideBeforeSessionExit();
 }, { passive:true });
 
 // Leaving the browser/app must never restore the chat from bfcache.
