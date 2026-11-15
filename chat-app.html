@@ -1563,12 +1563,10 @@ const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 const authScreen = document.getElementById('auth-screen');
 const homeScreen = document.getElementById('home-screen');
 const chatScreen = document.getElementById('chat-screen');
-const bottomNavObserver = new MutationObserver(syncBottomNav);
-bottomNavObserver.observe(homeScreen, { attributes:true, attributeFilter:['class'] });
-bottomNavObserver.observe(chatScreen, { attributes:true, attributeFilter:['class'] });
 const chatBox = document.getElementById('chat-box');
 const chatList = document.getElementById('chat-list');
 const msgInput = document.getElementById('message-input');
+window.msgInput = msgInput;
 const errorBox = document.getElementById('error-box');
 const backBtn = document.getElementById('back-btn');
 const authBtn = document.getElementById('auth-btn');
@@ -2451,18 +2449,24 @@ function closeSettings() {
 function syncBottomNav() {
   const nav = document.getElementById('app-bottom-nav');
   if (!nav) return;
-  const visible = !!currentUser && (homeScreen?.classList.contains('active') || chatScreen?.classList.contains('active'));
+  const auth = document.getElementById('auth-screen');
+  const home = document.getElementById('home-screen');
+  const chat = document.getElementById('chat-screen');
+  const visible = !!auth && !auth.classList.contains('active') && (home?.classList.contains('active') || chat?.classList.contains('active'));
   nav.classList.toggle('show', visible);
   document.body.classList.toggle('bottom-nav-visible', visible);
-  nav.querySelectorAll('[data-bottom-nav]').forEach(item => item.classList.toggle('active', item.dataset.bottomNav === 'chatting' && chatScreen?.classList.contains('active')));
+  nav.querySelectorAll('[data-bottom-nav]').forEach(item => item.classList.toggle('active', item.dataset.bottomNav === 'chatting' && document.getElementById('chat-screen')?.classList.contains('active')));
 }
+const bottomNavObserver = new MutationObserver(syncBottomNav);
+bottomNavObserver.observe(document.getElementById('home-screen'), { attributes:true, attributeFilter:['class'] });
+bottomNavObserver.observe(document.getElementById('chat-screen'), { attributes:true, attributeFilter:['class'] });
 function handleBottomNav(action) {
   if (action === 'settings') { openSettings(); return; }
   if (action === 'watching') { toast('Watching time — Soon', 'info'); return; }
   if (action === 'chatting') {
     closeSettings();
-    if (chatScreen?.classList.contains('active')) return;
-    if (homeScreen) homeScreen.classList.add('active');
+    if (document.getElementById('chat-screen')?.classList.contains('active')) return;
+    document.getElementById('home-screen')?.classList.add('active');
     syncBottomNav();
   }
 }
