@@ -122,6 +122,7 @@ html,body { width:100%; height:100%; min-height:100vh; overflow:hidden; backgrou
 button,input,textarea { font:inherit; }
 .screen { display:none; width:100vw; height:var(--viewport-height,100dvh); min-height:0; max-height:100%; flex-direction:column; background:var(--bg-radial); position:relative; overflow:hidden; }
 .screen.active { display:flex; }
+html.session-leaving .screen, html.session-leaving #fs-toggle-btn, html.session-leaving #starred-room { visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
 .back-btn-absolute { position:absolute; top:20px; left:20px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-main); width:40px; height:40px; border-radius:50%; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:20; }
 .back-btn-absolute:hover { border-color:var(--accent-color); color:var(--accent-color); }
 .auth-container { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; }
@@ -2100,6 +2101,7 @@ async function completeApprovedLogin(data, uv, sessionProof) {
   }
   currentUser = data.username || uv;
   currentAccountData = data;
+  loadNotificationsForUser();
   document.getElementById('welcome-text').innerText = t('home.welcome') + currentUser;
   authScreen.classList.remove('active');
   homeScreen.classList.add('active');
@@ -2216,6 +2218,7 @@ function startUsageHeartbeat() {
 let _autoLockDarkTimer = null;
 let _autoLockTimer = null;
 let _autoLockActive = false;
+let _autoLockWarning = false;
 
 function startAutoLock() {
   _autoLockActive = true;
@@ -2223,12 +2226,14 @@ function startAutoLock() {
 }
 function stopAutoLock() {
   _autoLockActive = false;
+  _autoLockWarning = false;
   clearTimeout(_autoLockTimer);
   clearTimeout(_autoLockDarkTimer);
   const ov = document.getElementById('autolock-overlay');
   if (ov) { ov.classList.remove('show'); ov.classList.remove('locked'); }
 }
 function pauseAutoLockForAvatarFlow() {
+  _autoLockWarning = false;
   clearTimeout(_autoLockTimer);
   clearTimeout(_autoLockDarkTimer);
   const ov = document.getElementById('autolock-overlay');
@@ -2244,6 +2249,7 @@ function finishAvatarPicker() {
 }
 function resetAutoLockTimer() {
   if (!_autoLockActive || !currentUser) return;
+  _autoLockWarning = false;
   clearTimeout(_autoLockTimer);
   clearTimeout(_autoLockDarkTimer);
   const ov = document.getElementById('autolock-overlay');
@@ -2251,6 +2257,7 @@ function resetAutoLockTimer() {
   const lockSeconds = Number(localStorage.getItem('private-chat-autolock') || 45);
   if (lockSeconds <= 0) return;
   _autoLockTimer = setTimeout(() => {
+    _autoLockWarning = true;
     const ov2 = document.getElementById('autolock-overlay');
     if (ov2) ov2.classList.add('show');
     _autoLockDarkTimer = setTimeout(() => {
@@ -2261,6 +2268,7 @@ function resetAutoLockTimer() {
   }, lockSeconds * 1000);
 }
 function lockAppNow() {
+  _autoLockWarning = false;
   if (messagePollTimer) clearInterval(messagePollTimer);
   messagePollTimer = null;
   messageLoadSequence++;
@@ -2297,7 +2305,7 @@ function lockAppNow() {
 }
 ['touchstart','touchmove','mousedown','mousemove','keydown','keypress','scroll','click','focus','wheel']
   .forEach(ev => document.addEventListener(ev, () => {
-    if (_autoLockActive) resetAutoLockTimer();
+    if (_autoLockActive && !_autoLockWarning) resetAutoLockTimer();
   }, { passive: true, capture: true }));
 
 // ═══════ Chat PIN ═══════
@@ -4774,8 +4782,10 @@ document.getElementById('input-username')?.addEventListener('keydown', e => {
 });
 
 // ═══════ Notifications center ═══════
-let appNotifications = localJson('private-chat-notifications', []);
-function saveNotifications() { saveLocalJson('private-chat-notifications', appNotifications.slice(0, 80)); }
+let appNotifications = [];
+function notificationStoreKey() { return currentUser ? `private-chat-notifications:${String(currentUser).toLowerCase()}` : 'private-chat-notifications:guest'; }
+function loadNotificationsForUser() { appNotifications = currentUser ? localJson(notificationStoreKey(), []) : []; updateNotificationBadge(); }
+function saveNotifications() { saveLocalJson(notificationStoreKey(), appNotifications.slice(0, 80)); }
 function updateNotificationBadge() { const b=document.getElementById('notifications-badge'); const n=appNotifications.filter(x=>!x.read).length; if(b){b.textContent=n>99?'99+':n;b.style.display=n?'flex':'none';} }
 function pushNotification(title, body, icon='fa-bell') { if(!title) return; appNotifications.unshift({id:Date.now()+Math.random(),title,body,icon,at:new Date().toISOString(),read:false}); saveNotifications(); updateNotificationBadge(); }
 function renderNotifications() { const box=document.getElementById('notification-list'); if(!box)return; if(!appNotifications.length){box.innerHTML='<div class="notification-empty">No notifications yet.</div>';return;} box.innerHTML=appNotifications.map(n=>`<div class="notification-item ${n.read?'':'unread'}" data-notification-id="${n.id}"><i class="fa-solid ${escapeHtml(n.icon||'fa-bell')}"></i><div><strong>${escapeHtml(n.title)}</strong><small>${escapeHtml(n.body||'')} · ${new Date(n.at).toLocaleString()}</small></div></div>`).join(''); }
@@ -5204,8 +5214,12 @@ window.addEventListener('beforeunload', () => {
 // ═══════ Session privacy on leave ═══════
 // Leaving the chat page returns the tab to Lab X; keep the picker exception so profile uploads can finish.
 let labReturnPending = false;
+function hideBeforeSessionExit() {
+  document.documentElement.classList.add('session-leaving');
+}
 function returnToLabX() {
   labReturnPending = true;
+  hideBeforeSessionExit();
   if (currentUser) {
     try { lockAppNow(); } catch (e) { console.error('Session lock failed:', e); }
   }
@@ -5223,6 +5237,7 @@ document.addEventListener('visibilitychange', () => {
   } else if (document.visibilityState === 'visible' && chatFilePickerActive && chatFilePickerWasHidden) {
     finishChatFilePicker();
   } else if (document.visibilityState === 'hidden' && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
+    hideBeforeSessionExit();
     returnToLabX();
   } else if (document.visibilityState === 'visible' && labReturnPending && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     returnToLabX();
@@ -5233,17 +5248,18 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', () => {
   if (!avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) {
     labReturnPending = true;
+    hideBeforeSessionExit();
     if (currentUser) { try { lockAppNow(); } catch(e) {} }
   }
 }, { passive:true });
 window.addEventListener('beforeunload', () => { if (currentUser && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) { try { lockAppNow(); } catch(e) {} } });
 window.addEventListener('pageshow', event => {
-  if ((event.persisted || labReturnPending) && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) returnToLabX();
+  if ((event.persisted || labReturnPending) && !avatarPickerActive && !avatarUploadActive && !chatFilePickerActive) { hideBeforeSessionExit(); returnToLabX(); }
 }, { passive:true });
 window.addEventListener('focus', () => {
   if (avatarPickerActive && avatarPickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishAvatarPicker, 150);
   else if (chatFilePickerActive && chatFilePickerWasHidden && document.visibilityState !== 'hidden') setTimeout(finishChatFilePicker, 150);
-  else if (labReturnPending && document.visibilityState !== 'hidden' && !avatarUploadActive && !chatFilePickerActive) returnToLabX();
+  else if (labReturnPending && document.visibilityState !== 'hidden' && !avatarUploadActive && !chatFilePickerActive) { hideBeforeSessionExit(); returnToLabX(); }
 }, { passive:true });
 
 // ═══════ Render Font Options ═══════
