@@ -3243,13 +3243,11 @@ async function openChat(fn) {
 
   if (messageSubscription) c.removeChannel(messageSubscription);
   messageSubscription = c.channel(`chat_${currentUser}_${fn}`)
-    // Each side of the current account's conversation gets one precise filter.
-    // `receiver=currentUser` receives peer messages; `sender=currentUser` keeps
-    // the sender's own message state in sync without a redundant peer filter.
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleIncomingMessage(p.new))
-    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`receiver=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
-    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages', filter:`sender=eq.${currentUser}` }, p => handleUpdatedMessage(p.new))
+    // Listen to the table and let the client-side conversation guard decide
+    // whether the event belongs to this open chat. This avoids Realtime filter
+    // misses caused by casing or special characters in usernames.
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'private_messages' }, p => handleIncomingMessage(p.new))
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'private_messages' }, p => handleUpdatedMessage(p.new))
     .subscribe(status => {
       updateConnBanner(status);
       if (status === 'SUBSCRIBED') pollConversationMessages(fn, loadToken);
@@ -3271,13 +3269,19 @@ async function openChat(fn) {
 
 function handleIncomingMessage(m) {
   if (!m) return;
-  const isMine = m.sender === currentUser;
-  const friend = isMine ? m.receiver : m.sender;
-  if (!friend || (isMine ? m.sender !== currentUser : m.receiver !== currentUser)) return;
+  const me = String(currentUser || '').toLowerCase();
+  const sender = String(m.sender || '');
+  const receiver = String(m.receiver || '');
+  const senderKey = sender.toLowerCase();
+  const receiverKey = receiver.toLowerCase();
+  const isMine = senderKey === me;
+  const friend = isMine ? receiver : sender;
+  const friendKey = friend.toLowerCase();
+  if (!me || !friend || (isMine ? senderKey !== me : receiverKey !== me)) return;
   if (!isMine) recordLastSeen(friend, new Date(m.created_at).getTime() || Date.now());
   const createdAt = Date.parse(m.created_at || '');
   if (Number.isFinite(createdAt) && (!latestMessageAt || createdAt > Date.parse(latestMessageAt))) latestMessageAt = m.created_at;
-  if (friend === currentChatFriend && chatScreen.classList.contains('active')) {
+  if (friendKey === String(currentChatFriend || '').toLowerCase() && chatScreen.classList.contains('active')) {
     if (chatBox.querySelector(`[data-message-id="${CSS.escape(String(m.id))}"]`)) return;
     const ph = chatBox.querySelector('.empty-chat-message');
     if (ph) ph.remove();
@@ -3299,7 +3303,7 @@ function handleIncomingMessage(m) {
 }
 
 async function pollConversationMessages(friend, loadToken) {
-  if (!currentUser || !friend || currentChatFriend !== friend || !chatScreen.classList.contains('active') || document.visibilityState !== 'visible') return;
+  if (!currentUser || !friend || String(currentChatFriend || '').toLowerCase() !== String(friend).toLowerCase() || !chatScreen.classList.contains('active')) return;
   if (messagePollInFlight.has(friend)) return;
   const c = getSupabase();
   if (!c) return;
