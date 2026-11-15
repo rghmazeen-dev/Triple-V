@@ -1772,7 +1772,6 @@ function setTheme(theme) {
   localStorage.setItem('private-chat-theme', theme);
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-option').forEach(opt => opt.classList.toggle('active', opt.dataset.themeOption === theme));
-  updateChatModeUI();
 }
 function getCurrentTheme() {
   try { return localStorage.getItem('private-chat-theme') || 'crimson'; } catch(e) { return 'crimson'; }
