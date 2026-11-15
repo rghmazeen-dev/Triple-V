@@ -791,6 +791,25 @@ body.cinematic-mode #chat-screen .input-container { background:rgba(0,0,0,.6); }
 #fs-toggle-btn.hide-fs { display: none !important; }
 #fs-toggle-btn.is-fullscreen { color: var(--accent-color); border-color: var(--accent-color); }
 #fs-toggle-btn.shift-for-back { left: max(62px, calc(env(safe-area-inset-left) + 52px)); }
+#chat-starred-btn { display:flex !important; color:#f7c948; }
+#chat-starred-btn:hover { color:#ffe58a; border-color:#f7c948; background:rgba(247,201,72,.12); }
+#starred-room { position:fixed; inset:0; z-index:620; display:none; flex-direction:column; background:var(--chat-bg); color:var(--text-main); }
+#starred-room.show { display:flex; animation:starRoomIn .25s ease-out; }
+.starred-room-head { flex:0 0 auto; min-height:62px; display:flex; align-items:center; gap:12px; padding:10px 14px; background:color-mix(in srgb,var(--card-bg) 92%,transparent); border-bottom:1px solid var(--glass-border); box-shadow:0 5px 20px rgba(0,0,0,.18); }
+.starred-room-head button { width:40px; height:40px; border:1px solid var(--glass-border); border-radius:50%; background:rgba(255,255,255,.06); color:var(--text-main); cursor:pointer; }
+.starred-room-head h3 { margin:0; font-size:1rem; }
+.starred-room-head p { margin:2px 0 0; color:var(--text-muted); font-size:.7rem; }
+.starred-room-title { min-width:0; flex:1; }
+#starred-room-list { flex:1; overflow:auto; padding:18px 14px 28px; display:flex; flex-direction:column; gap:10px; }
+.starred-room-card { align-self:flex-start; width:min(88%,560px); border:1px solid rgba(247,201,72,.28); border-radius:16px 16px 16px 5px; padding:12px 14px; background:linear-gradient(135deg,rgba(247,201,72,.13),rgba(255,255,255,.045)); box-shadow:0 8px 22px rgba(0,0,0,.14); }
+.starred-room-card.mine { align-self:flex-end; border-radius:16px 16px 5px 16px; background:linear-gradient(135deg,var(--msg-me-bg),rgba(247,201,72,.13)); }
+.starred-room-card .starred-room-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; color:#f7c948; font-size:.7rem; font-weight:800; }
+.starred-room-card time { color:var(--text-muted); font-weight:500; font-size:.63rem; }
+.starred-room-card .starred-room-text { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.55; font-size:.9rem; }
+.starred-room-empty { margin:auto; text-align:center; color:var(--text-muted); padding:28px; }
+#fs-toggle-btn.fs-drag-mode { color:#f7c948; border-color:#f7c948; box-shadow:0 0 0 5px rgba(247,201,72,.14),0 12px 30px rgba(0,0,0,.38); cursor:move; }
+@keyframes starRoomIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
 html.app-fullscreen, html.app-fullscreen body { width:100%; height:100%; min-height:100dvh; overflow:hidden; }
 html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-height:none; min-height:var(--app-vh, 100dvh); }
 
@@ -887,14 +906,6 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
           <button type="button" id="profile-save-btn" class="profile-save-btn">Save</button>
           <div class="profile-save-status" id="profile-save-status"></div>
         </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <button type="button" class="settings-section-header" data-toggle-section="starred-messages-section-body">
-        <span><i class="fa-solid fa-star" style="color:#f7c948;margin-inline-end:6px;"></i> Starred Messages</span><i class="fa-solid fa-chevron-down settings-section-arrow"></i>
-      </button>
-      <div class="settings-section-body" id="starred-messages-section-body">
-        <div id="starred-messages-list" class="starred-message-list"><div class="profile-save-status">Loading starred messages...</div></div>
       </div>
     </div>
     <div class="settings-section" id="mazen-hidden-chats-section" style="display:none;">
@@ -1030,6 +1041,7 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
       <button type="button" class="chat-header-icon" id="chat-search-btn" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
       <button type="button" class="chat-header-icon" id="chat-pin-btn" title="Lock chat"><i class="fa-solid fa-lock-open" id="chat-pin-icon"></i></button>
       <button type="button" class="chat-header-icon" id="chat-call-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
+      <button type="button" class="chat-header-icon" id="chat-starred-btn" title="Starred Messages" aria-label="Starred Messages"><i class="fa-solid fa-star"></i></button>
       <button type="button" class="chat-header-icon" id="chat-watch-btn" title="Watch Together"><i class="fa-solid fa-tv"></i></button>
       <button type="button" class="chat-header-icon" id="chat-wb-btn" title="Whiteboard"><i class="fa-solid fa-pen-ruler"></i></button>
       <button type="button" class="theme-btn chat-header-icon chat-theme-small theme-toggle-btn" title="Theme"><i class="fa-solid fa-palette theme-icon"></i></button>
@@ -1084,6 +1096,16 @@ html.app-fullscreen .screen { height:100dvh; height:var(--app-vh, 100dvh); max-h
       <div id="recording-bar" class="recording-bar"><button type="button" id="rec-cancel" class="rec-cancel"><i class="fa-solid fa-trash-can"></i></button><span class="rec-dot"></span><span id="rec-time" class="rec-time">0:00</span><span class="rec-hint">Release to send</span></div>
     </div>
   </div>
+</div>
+
+<!-- ═══════ Read-only Starred Messages Room ═══════ -->
+<div id="starred-room" aria-hidden="true">
+  <div class="starred-room-head">
+    <button type="button" id="starred-room-close" aria-label="Close Starred Messages"><i class="fa-solid fa-arrow-right"></i></button>
+    <div class="starred-room-title"><h3>Starred Messages</h3><p>Saved messages from your conversations</p></div>
+    <i class="fa-solid fa-star" style="color:#f7c948;font-size:1.15rem;"></i>
+  </div>
+  <div id="starred-room-list"><div class="starred-room-empty">Loading starred messages...</div></div>
 </div>
 
 <!-- ═══════ Bottom Navigation ═══════ -->
@@ -2487,7 +2509,6 @@ function openSettings() {
   d.classList.add('show');
   document.body.style.overflow = 'hidden';
   refreshMazenHiddenChatControls();
-  if (typeof loadStarredMessages === 'function') loadStarredMessages();
 }
 function closeSettings() {
   const o = document.getElementById('settings-overlay');
@@ -3862,19 +3883,21 @@ function syncStarMarker(mid) {
   if (group) group.classList.toggle('starred', starredMessageIds.has(String(mid)));
 }
 async function loadStarredMessages() {
-  const list = document.getElementById('starred-messages-list');
+  const room = document.getElementById('starred-room-list');
   const c = getSupabase();
-  if (!c || !currentUser) { if (list) list.innerHTML = '<div class="profile-save-status">Sign in to view starred messages.</div>'; return; }
-  const { data, error } = await c.from('message_stars').select('id,message_id,sender,receiver,snippet,created_at').eq('username', currentUser).order('created_at', { ascending:false }).limit(100);
-  if (error) { if (list) list.innerHTML = '<div class="profile-save-status">Could not load starred messages.</div>'; return; }
+  if (!c || !currentUser) { if (room) room.innerHTML = '<div class="starred-room-empty">Sign in to view starred messages.</div>'; return; }
+  const { data, error } = await c.from('message_stars').select('id,message_id,sender,receiver,snippet,content,created_at').eq('username', currentUser).order('created_at', { ascending:false }).limit(100);
+  if (error) { if (room) room.innerHTML = '<div class="starred-room-empty">Could not load starred messages.</div>'; return; }
   starredMessageIds.clear();
   (data || []).forEach(row => starredMessageIds.add(String(row.message_id)));
   document.querySelectorAll('.msg-group[data-message-id]').forEach(g => g.classList.toggle('starred', starredMessageIds.has(String(g.dataset.messageId))));
-  if (!list) return;
-  if (!data?.length) { list.innerHTML = '<div class="profile-save-status">No starred messages yet.</div>'; return; }
-  list.innerHTML = data.map(row => {
-    const friend = String(row.sender).toLowerCase() === String(currentUser).toLowerCase() ? row.receiver : row.sender;
-    return `<button type="button" class="starred-message-item" data-star-friend="${escapeHtml(friend)}" data-star-message="${escapeHtml(String(row.message_id))}"><strong><span><i class="fa-solid fa-star"></i> ${escapeHtml(friend)}</span><time>${new Date(row.created_at).toLocaleString()}</time></strong><small>${escapeHtml(row.snippet || 'Starred message')}</small></button>`;
+  if (!room) return;
+  if (!data?.length) { room.innerHTML = '<div class="starred-room-empty"><i class="fa-regular fa-star" style="font-size:2rem;color:#f7c948;display:block;margin-bottom:10px;"></i>No starred messages yet.</div>'; return; }
+  room.innerHTML = data.map(row => {
+    const mine = String(row.sender).toLowerCase() === String(currentUser).toLowerCase();
+    const text = row.content ? (getMessagePayload({content:row.content}).text || row.snippet || 'Saved message') : (row.snippet || 'Saved message');
+    const author = mine ? 'You' : row.sender;
+    return `<article class="starred-room-card ${mine ? 'mine' : ''}"><div class="starred-room-meta"><span><i class="fa-solid fa-star"></i> ${escapeHtml(author)}</span><time>${new Date(row.created_at).toLocaleString()}</time></div><div class="starred-room-text">${escapeHtml(text)}</div></article>`;
   }).join('');
 }
 async function toggleStarMessage(mid) {
@@ -3886,12 +3909,19 @@ async function toggleStarMessage(mid) {
     starredMessageIds.delete(key); syncStarMarker(mid); toast('Star removed', 'success');
   } else {
     const msg = msgCache.get(key); if (!msg) return;
-    const { error } = await c.from('message_stars').upsert([{ username:currentUser, message_id:mid, sender:msg.sender, receiver:msg.receiver, snippet:buildSnippet(msg, 120) }], { onConflict:'username,message_id' });
+    const { error } = await c.from('message_stars').upsert([{ username:currentUser, message_id:mid, sender:msg.sender, receiver:msg.receiver, content:msg.content || '', snippet:buildSnippet(msg, 120) }], { onConflict:'username,message_id' });
     if (error) { toast('Could not star message', 'error'); return; }
     starredMessageIds.add(key); syncStarMarker(mid); toast('Message starred', 'success');
   }
-  const listBody = document.getElementById('starred-messages-section-body');
-  if (listBody?.classList.contains('show')) loadStarredMessages();
+  if (document.getElementById('starred-room')?.classList.contains('show')) loadStarredMessages();
+}
+function openStarredRoom() {
+  const room = document.getElementById('starred-room'); if (!room) return;
+  room.classList.add('show'); room.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; loadStarredMessages();
+}
+function closeStarredRoom() {
+  const room = document.getElementById('starred-room'); if (!room) return;
+  room.classList.remove('show'); room.setAttribute('aria-hidden','true'); document.body.style.overflow='';
 }
 
 function openMsgActions(group) {
@@ -4881,7 +4911,6 @@ document.addEventListener('click', e => {
     h.classList.toggle('open');
     const b = document.getElementById(h.dataset.toggleSection);
     if (b) b.classList.toggle('show');
-    if (h.dataset.toggleSection === 'starred-messages-section-body' && b?.classList.contains('show')) loadStarredMessages();
     return;
   }
   if (t.closest('#profile-save-btn')) { saveProfile(); return; }
@@ -4914,6 +4943,8 @@ document.addEventListener('click', e => {
   if (t.closest('#chat-search-next')) { jumpToMatch(_searchIdx + 1); return; }
   if (t.closest('#chat-pin-btn')) { openPinSetup(currentChatFriend); return; }
   if (t.closest('#chat-call-btn')) { toast(tr('chat.call_soon')); return; }
+  if (t.closest('#chat-starred-btn')) { openStarredRoom(); return; }
+  if (t.closest('#starred-room-close')) { closeStarredRoom(); return; }
   if (t.closest('#chat-watch-btn')) { openWatchRoom(); return; }
   if (t.closest('#chat-wb-btn')) { openWhiteboard(); return; }
 
@@ -5236,6 +5267,7 @@ function updateFsButtonVisibility() {
     icon.className = on ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
   }
   btn.title = on ? 'Exit Fullscreen' : 'Fullscreen';
+  applySavedFsPosition();
 }
 async function toggleFullscreen() {
   const root = document.documentElement;
@@ -5260,11 +5292,51 @@ async function toggleFullscreen() {
   if (wasNativeFullscreen) root.classList.remove('app-fullscreen');
   setTimeout(updateFsButtonVisibility, 80);
 }
-document.getElementById('fs-toggle-btn')?.addEventListener('click', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  toggleFullscreen();
+const fsToggleBtn = document.getElementById('fs-toggle-btn');
+let fsLongPressTimer = null, fsDragging = false, fsSuppressClick = false, fsPointerId = null, fsDragOffsetX = 0, fsDragOffsetY = 0;
+function applySavedFsPosition() {
+  if (!fsToggleBtn) return;
+  try {
+    const pos = JSON.parse(localStorage.getItem('pc-fs-position') || 'null');
+    if (!pos || !Number.isFinite(pos.left) || !Number.isFinite(pos.top)) return;
+    const maxL = Math.max(0, innerWidth - fsToggleBtn.offsetWidth);
+    const maxT = Math.max(0, innerHeight - fsToggleBtn.offsetHeight);
+    fsToggleBtn.style.left = Math.min(maxL, Math.max(0, pos.left)) + 'px';
+    fsToggleBtn.style.top = Math.min(maxT, Math.max(0, pos.top)) + 'px';
+    fsToggleBtn.style.right = 'auto';
+  } catch(e){}
+}
+function saveFsPosition() {
+  if (!fsToggleBtn) return;
+  const r = fsToggleBtn.getBoundingClientRect();
+  localStorage.setItem('pc-fs-position', JSON.stringify({left:r.left, top:r.top}));
+}
+function endFsDrag() {
+  if (!fsToggleBtn) return;
+  clearTimeout(fsLongPressTimer); fsLongPressTimer=null;
+  if (!fsDragging) return;
+  fsDragging=false; fsSuppressClick=true; fsToggleBtn.classList.remove('fs-drag-mode');
+  try { fsToggleBtn.releasePointerCapture(fsPointerId); } catch(e){}
+  fsPointerId=null; saveFsPosition();
+  setTimeout(() => { fsSuppressClick=false; }, 450);
+}
+fsToggleBtn?.addEventListener('pointerdown', e => {
+  if (e.button !== undefined && e.button !== 0) return;
+  fsPointerId=e.pointerId;
+  const r=fsToggleBtn.getBoundingClientRect(); fsDragOffsetX=e.clientX-r.left; fsDragOffsetY=e.clientY-r.top;
+  fsLongPressTimer=setTimeout(() => { fsDragging=true; fsToggleBtn.classList.add('fs-drag-mode'); try { fsToggleBtn.setPointerCapture(fsPointerId); } catch(_){}; toast('Drag fullscreen button to move it', 'info', 1800); }, 4000);
 });
+fsToggleBtn?.addEventListener('pointermove', e => {
+  if (!fsDragging) return;
+  const left=Math.min(Math.max(0,e.clientX-fsDragOffsetX),Math.max(0,innerWidth-fsToggleBtn.offsetWidth));
+  const top=Math.min(Math.max(0,e.clientY-fsDragOffsetY),Math.max(0,innerHeight-fsToggleBtn.offsetHeight));
+  fsToggleBtn.style.left=left+'px'; fsToggleBtn.style.top=top+'px'; fsToggleBtn.style.right='auto'; e.preventDefault();
+});
+fsToggleBtn?.addEventListener('pointerup', endFsDrag);
+fsToggleBtn?.addEventListener('pointercancel', endFsDrag);
+fsToggleBtn?.addEventListener('contextmenu', e => e.preventDefault());
+fsToggleBtn?.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (fsSuppressClick) return; toggleFullscreen(); });
+applySavedFsPosition();
 function _resettleAfterViewportRestore() {
   if (!chatScreen || !chatScreen.classList.contains('active')) return;
   const keepBottom = _captureBottomIntent();
